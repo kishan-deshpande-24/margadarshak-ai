@@ -5,7 +5,8 @@ const router = express.Router()
 const {
 generateRoadmap,
 getRoadmap,
-updateProgress
+updateProgress,
+downloadRoadmap
 } = require("../controllers/roadmapController")
 
 // ==============================
@@ -27,6 +28,13 @@ router.get("/", getRoadmap)
 // ==============================
 
 router.post("/progress", updateProgress)
+
+
+// ==============================
+// Download Roadmap
+// ==============================
+
+router.get("/download", downloadRoadmap)
 
 
 module.exports = router

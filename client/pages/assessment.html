@@ -1,265 +1,286 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Interest Assessment - Margadarshak AI</title>
+    <title>Interest Assessment - Margadarshak AI</title>
 
-<link rel="stylesheet" href="../css/style.css">
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
 
 </head>
 
 <body>
 
-<div class="app-container">
+    <div class="app-container">
+
+        <!-- Sidebar -->
+
+        <div class="sidebar">
+
+            <div class="sidebar-header">
+                <img src="../assets/Logo.jpeg" class="logo-img">
+                <h3>Margadarshak AI</h3>
+            </div>
+
+            <div class="sidebar-nav">
+
+                <a href="dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard" class="nav-icon"></i>
+                    Dashboard
+                </a>
+                <a href="assessment.html" class="nav-item active">
+                    <i data-lucide="clipboard-check" class="nav-icon"></i>
+                    Assessment
+                </a>
+                <a href="tracker.html" class="nav-item">
+                    <i data-lucide="target" class="nav-icon"></i>
+                    Tracker
+                </a>
+                <a href="roadmap.html" class="nav-item">
+                    <i data-lucide="map" class="nav-icon"></i>
+                    Roadmap
+                </a>
+                <a href="resume.html" class="nav-item">
+                    <i data-lucide="file-text" class="nav-icon"></i>
+                    Resume
+                </a>
+                <a href="interview.html" class="nav-item">
+                    <i data-lucide="message-square" class="nav-icon"></i>
+                    Interview
+                </a>
+                <a href="mentor.html" class="nav-item">
+                    <i data-lucide="mic" class="nav-icon"></i>
+                    English Mentor
+                </a>
+                <a href="teams.html" class="nav-item">
+                    <i data-lucide="users" class="nav-icon"></i>
+                    Teams
+                </a>
+                <a href="community.html" class="nav-item">
+                    <i data-lucide="globe" class="nav-icon"></i>
+                    Community
+                </a>
+                <a href="profile.html" class="nav-item">
+                    <i data-lucide="user" class="nav-icon"></i>
+                    Profile
+                </a>
+                <a href="settings.html" class="nav-item">
+                    <i data-lucide="settings" class="nav-icon"></i>
+                    Settings
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- Main Content -->
+
+        <div class="main-content">
+
+            <!-- Top Navbar -->
+
+            <div class="top-navbar">
+
+                <div class="hamburger-menu" onclick="toggleMobileSidebar()">
+                    <i data-lucide="menu" class="nav-icon"></i>
+                </div>
+
+                <h2>AI Career Assessment</h2>
+
+                <div>
+
+                    <button class="btn btn-secondary" onclick="window.location.href='settings.html'">
+                        Settings
+                    </button>
+
+                    <button class="btn btn-danger" onclick="logout()">
+                        Logout
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- Mobile Sidebar Overlay -->
+            <div class="mobile-sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
+            <!-- Mobile Sidebar -->
+            <div class="mobile-sidebar" id="mobileSidebar">
+
+                <button class="close-sidebar" onclick="toggleMobileSidebar()">
+                    <i data-lucide="x" class="nav-icon"></i>
+                </button>
+
+                <div class="sidebar-header">
+                    <img src="../assets/Logo.jpeg" class="logo-img">
+                    <h3>Margadarshak AI</h3>
+                </div>
 
-<!-- Sidebar -->
+                <div class="sidebar-nav">
 
-<div class="sidebar">
+                    <a href="dashboard.html" class="nav-item">
+                        <i data-lucide="layout-dashboard" class="nav-icon"></i>
+                        Dashboard
+                    </a>
+                    <a href="assessment.html" class="nav-item active">
+                        <i data-lucide="clipboard-check" class="nav-icon"></i>
+                        Assessment
+                    </a>
+                    <a href="tracker.html" class="nav-item">
+                        <i data-lucide="target" class="nav-icon"></i>
+                        Tracker
+                    </a>
+                    <a href="roadmap.html" class="nav-item">
+                        <i data-lucide="map" class="nav-icon"></i>
+                        Roadmap
+                    </a>
+                    <a href="resume.html" class="nav-item">
+                        <i data-lucide="file-text" class="nav-icon"></i>
+                        Resume
+                    </a>
+                    <a href="interview.html" class="nav-item">
+                        <i data-lucide="message-square" class="nav-icon"></i>
+                        Interview
+                    </a>
+                    <a href="mentor.html" class="nav-item">
+                        <i data-lucide="mic" class="nav-icon"></i>
+                        English Mentor
+                    </a>
+                    <a href="teams.html" class="nav-item">
+                        <i data-lucide="users" class="nav-icon"></i>
+                        Teams
+                    </a>
+                    <a href="community.html" class="nav-item">
+                        <i data-lucide="globe" class="nav-icon"></i>
+                        Community
+                    </a>
+                    <a href="profile.html" class="nav-item">
+                        <i data-lucide="user" class="nav-icon"></i>
+                        Profile
+                    </a>
+                    <a href="settings.html" class="nav-item">
+                        <i data-lucide="settings" class="nav-icon"></i>
+                        Settings
+                    </a>
 
-<div class="sidebar-header">
-<img src="../assets/Logo.jpeg" class="logo-img">
-<h3>Margadarshak AI</h3>
-</div>
+                </div>
 
-<div class="sidebar-nav">
+            </div>
 
-<a href="dashboard.html" class="nav-item">Dashboard</a>
-<a href="assessment.html" class="nav-item active">Assessment</a>
-<a href="tracker.html" class="nav-item">Tracker</a>
-<a href="roadmap.html" class="nav-item">Roadmap</a>
-<a href="resume.html" class="nav-item">Resume</a>
-<a href="interview.html" class="nav-item">Interview</a>
-<a href="mentor.html" class="nav-item">English Mentor</a>
-<a href="teams.html" class="nav-item">Teams</a>
-<a href="community.html" class="nav-item">Community</a>
-<a href="profile.html" class="nav-item">Profile</a>
+            <!-- Start Screen -->
 
-</div>
+            <div id="start-screen" class="glass-card animate-fade-in">
 
-</div>
+                <h2>Start a new quick assessment</h2>
 
+                <p>
+                    Answer a few AI generated questions to check how much you are learning from your roadmap
+                </p>
 
-<!-- Main Content -->
+                <button class="btn btn-primary" onclick="startAssessment()">
+                    Start Assessment
+                </button>
 
-<div class="main-content">
+            </div>
 
-<!-- Top Navbar -->
 
-<div class="top-navbar">
+            <!-- Progress -->
 
-<h2>AI Career Assessment</h2>
+            <div id="progress-container" class="glass-card" style="display:none">
 
-<div>
+                <div style="display:flex;justify-content:space-between">
 
-<button class="btn btn-secondary" onclick="window.location.href='settings.html'">
-Settings
-</button>
+                    <span id="question-number"></span>
+                    <span id="progress-percent"></span>
 
-<button class="btn btn-danger" onclick="logout()">
-Logout
-</button>
+                </div>
 
-</div>
+                <div style="background:rgba(255,255,255,0.1);height:8px;border-radius:10px;margin-top:10px">
 
-</div>
+                    <div id="progress-bar"
+                        style="height:100%;width:0%;background:linear-gradient(135deg,#4facfe,#00f2fe);border-radius:10px">
+                    </div>
 
+                </div>
 
-<!-- Start Screen -->
+            </div>
 
-<div id="start-screen" class="glass-card animate-fade-in">
 
-<h2>Discover Your Career Path</h2>
+            <!-- Question Screen -->
 
-<p>
-Answer a few AI generated questions to discover your ideal career.
-</p>
+            <div id="question-screen" class="glass-card" style="display:none">
 
-<button class="btn btn-primary" onclick="startAssessment()">
-Start Assessment
-</button>
+                <h2 id="question"></h2>
 
-</div>
+                <div id="options" class="dashboard-grid"></div>
 
+            </div>
 
-<!-- Progress -->
 
-<div id="progress-container" class="glass-card" style="display:none">
+            <!-- Result Screen -->
 
-<div style="display:flex;justify-content:space-between">
+            <div id="result-screen" class="glass-card" style="display:none">
 
-<span id="question-number"></span>
-<span id="progress-percent"></span>
+                <h2>Your Career Recommendation</h2>
 
-</div>
+                <div id="result"></div>
 
-<div style="background:rgba(255,255,255,0.1);height:8px;border-radius:10px;margin-top:10px">
+                <button class="btn btn-primary" onclick="goToRoadmap()">
+                    View Roadmap
+                </button>
 
-<div id="progress-bar" style="height:100%;width:0%;background:linear-gradient(135deg,#4facfe,#00f2fe);border-radius:10px"></div>
+            </div>
 
-</div>
 
-</div>
+            <!-- Previous Assessments -->
 
+            <div class="glass-card" style="margin-top:20px">
 
-<!-- Question Screen -->
+                <h3>Previous Assessments</h3>
 
-<div id="question-screen" class="glass-card" style="display:none">
+                <div id="previousAssessments" style="margin-top:15px">
 
-<h2 id="question"></h2>
+                    <p style="color:rgba(255,255,255,0.5)">No assessments completed yet.</p>
 
-<div id="options" class="dashboard-grid"></div>
+                </div>
 
-</div>
+            </div>
 
 
-<!-- Result Screen -->
+        </div>
 
-<div id="result-screen" class="glass-card" style="display:none">
+    </div>
 
-<h2>Your Career Recommendation</h2>
+    <script src="../js/layout.js"></script>
 
-<div id="result"></div>
+    <script src="../js/assessment.js"></script>
 
-<button class="btn btn-primary" onclick="goToRoadmap()">
-View Roadmap
-</button>
+    <script>
 
-</div>
+        function logout() {
 
+            localStorage.removeItem("token")
 
-</div>
+            window.location.href = "login.html"
 
-</div>
+        }
 
-<script src="../js/layout.js"></script>
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById("mobileSidebar");
+            const overlay = document.querySelector(".mobile-sidebar-overlay");
+            sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
+        }
 
-<script>
+        lucide.createIcons();
 
-let currentQuestion = 0
-let questions = []
-let answers = []
-
-async function startAssessment(){
-
-document.getElementById("start-screen").style.display="none"
-document.getElementById("progress-container").style.display="block"
-document.getElementById("question-screen").style.display="block"
-
-await loadQuestions()
-
-showQuestion()
-
-}
-
-async function loadQuestions(){
-
-const res = await fetch("/api/assessment")
-
-const data = await res.json()
-
-questions = data.questions || []
-
-}
-
-function showQuestion(){
-
-const q = questions[currentQuestion]
-
-document.getElementById("question-number").innerText =
-`Question ${currentQuestion+1} of ${questions.length}`
-
-document.getElementById("progress-percent").innerText =
-`${Math.round((currentQuestion/questions.length)*100)}%`
-
-document.getElementById("progress-bar").style.width =
-`${(currentQuestion/questions.length)*100}%`
-
-document.getElementById("question").innerText = q.question
-
-const options = document.getElementById("options")
-
-options.innerHTML=""
-
-q.options.forEach(option=>{
-
-const btn = document.createElement("button")
-
-btn.className="btn btn-secondary"
-
-btn.innerText = option
-
-btn.onclick = ()=> selectAnswer(option)
-
-options.appendChild(btn)
-
-})
-
-}
-
-function selectAnswer(answer){
-
-answers.push(answer)
-
-currentQuestion++
-
-if(currentQuestion < questions.length){
-
-showQuestion()
-
-}else{
-
-submitAssessment()
-
-}
-
-}
-
-async function submitAssessment(){
-
-const res = await fetch("/api/assessment/submit",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-answers
-})
-
-})
-
-const data = await res.json()
-
-document.getElementById("question-screen").style.display="none"
-document.getElementById("progress-container").style.display="none"
-document.getElementById("result-screen").style.display="block"
-
-document.getElementById("result").innerHTML = data.result
-
-}
-
-function goToRoadmap(){
-
-window.location.href="roadmap.html"
-
-}
-
-function logout(){
-
-localStorage.removeItem("token")
-
-window.location.href="login.html"
-
-}
-
-</script>
+    </script>
 
 </body>
+
 </html>

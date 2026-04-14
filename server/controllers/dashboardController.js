@@ -7,77 +7,79 @@ const askAI = require("../services/openai")
 
 exports.getDashboard = async (req, res) => {
 
-try{
+    try {
 
-// Get latest assessment
+        // Get latest assessment
 
-const { data: assessment } = await supabase
-.from("assessment")
-.select("*")
-.order("created_at", { ascending: false })
-.limit(1)
-
-
-// Get interview scores
-
-const { data: interviews } = await supabase
-.from("interviews")
-.select("*")
+        const { data: assessment } = await supabase
+            .from("assessment")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(1)
 
 
-// Get resume score
+        // Get interview scores
 
-const { data: resume } = await supabase
-.from("resume")
-.select("*")
-.order("created_at",{ascending:false})
-.limit(1)
+        const { data: interviews } = await supabase
+            .from("interviews")
+            .select("*")
 
 
+        // Get resume score
 
-// Default values
-
-let progress = 50
-let skills = ["HTML","CSS","JavaScript"]
-let skillScores = [60,70,80]
-
-let interviewDates = ["Week 1","Week 2"]
-let interviewScores = [60,70]
-
-let recommendations = "Continue learning"
+        const { data: resume } = await supabase
+            .from("resume")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(1)
 
 
 
-if(assessment && assessment.length > 0){
+        // Default values (empty states)
 
-progress = assessment[0].confidence || 70
+        let progress = 0
+        let skills = []
+        let skillScores = []
 
-skills = assessment[0].skills || skills
+        let interviewDates = []
+        let interviewScores = []
 
-skillScores = skills.map(()=>Math.floor(Math.random()*40)+60)
-
-}
-
-
-if(interviews && interviews.length){
-
-interviewDates = interviews.map((i,index)=>`Test ${index+1}`)
-
-interviewScores = interviews.map(i=>i.score)
-
-}
+        let recommendations = "No data available yet. Take an assessment to get started."
 
 
-if(resume && resume.length){
 
-progress = Math.max(progress,resume[0].score || 70)
+        if (assessment && assessment.length > 0) {
 
-}
+            progress = assessment[0].confidence || 70
+
+            skills = assessment[0].skills || skills
+
+            skillScores = skills.map(() => Math.floor(Math.random() * 40) + 60)
+
+        }
 
 
-// AI Recommendations
+        if (interviews && interviews.length) {
 
-const prompt = `
+            interviewDates = interviews.map((i, index) => `Test ${index + 1}`)
+
+            interviewScores = interviews.map(i => i.score)
+
+        }
+
+
+        if (resume && resume.length) {
+
+            progress = Math.max(progress, resume[0].score || 70)
+
+        }
+
+
+        // AI Recommendations (only call if there's data)
+
+        if (skills.length > 0) {
+
+            const prompt = `
 
 User skills:
 
@@ -87,37 +89,39 @@ Give 3 short recommendations
 
 `
 
-const ai = await askAI(prompt)
+            const ai = await askAI(prompt)
 
-recommendations = ai
+            recommendations = ai
+
+        }
 
 
-res.json({
+        res.json({
 
-progress,
+            progress,
 
-skills,
+            skills,
 
-skillScores,
+            skillScores,
 
-interviewDates,
+            interviewDates,
 
-interviewScores,
+            interviewScores,
 
-recommendations
+            recommendations
 
-})
+        })
 
-}catch(error){
+    } catch (error) {
 
-console.error(error)
+        console.error(error)
 
-res.status(500).json({
+        res.status(500).json({
 
-error:"Dashboard error"
+            error: "Dashboard error"
 
-})
+        })
 
-}
+    }
 
 }

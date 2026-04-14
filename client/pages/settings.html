@@ -8,7 +8,7 @@
 <title>Settings - Margadarshak AI</title>
 
 <link rel="stylesheet" href="../css/style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://unpkg.com/lucide@latest"></script>
 
 </head>
 
@@ -27,17 +27,50 @@
 
 <div class="sidebar-nav">
 
-<a href="dashboard.html" class="nav-item">Dashboard</a>
-<a href="assessment.html" class="nav-item">Assessment</a>
-<a href="tracker.html" class="nav-item">Tracker</a>
-<a href="roadmap.html" class="nav-item">Roadmap</a>
-<a href="resume.html" class="nav-item">Resume</a>
-<a href="interview.html" class="nav-item">Interview</a>
-<a href="mentor.html" class="nav-item">English Mentor</a>
-<a href="teams.html" class="nav-item">Teams</a>
-<a href="community.html" class="nav-item">Community</a>
-<a href="profile.html" class="nav-item">Profile</a>
-<a href="settings.html" class="nav-item active">Settings</a>
+<a href="dashboard.html" class="nav-item">
+<i data-lucide="layout-dashboard" class="nav-icon"></i>
+Dashboard
+</a>
+<a href="assessment.html" class="nav-item">
+<i data-lucide="clipboard-check" class="nav-icon"></i>
+Assessment
+</a>
+<a href="tracker.html" class="nav-item">
+<i data-lucide="target" class="nav-icon"></i>
+Tracker
+</a>
+<a href="roadmap.html" class="nav-item">
+<i data-lucide="map" class="nav-icon"></i>
+Roadmap
+</a>
+<a href="resume.html" class="nav-item">
+<i data-lucide="file-text" class="nav-icon"></i>
+Resume
+</a>
+<a href="interview.html" class="nav-item">
+<i data-lucide="message-square" class="nav-icon"></i>
+Interview
+</a>
+<a href="mentor.html" class="nav-item">
+<i data-lucide="mic" class="nav-icon"></i>
+English Mentor
+</a>
+<a href="teams.html" class="nav-item">
+<i data-lucide="users" class="nav-icon"></i>
+Teams
+</a>
+<a href="community.html" class="nav-item">
+<i data-lucide="globe" class="nav-icon"></i>
+Community
+</a>
+<a href="profile.html" class="nav-item">
+<i data-lucide="user" class="nav-icon"></i>
+Profile
+</a>
+<a href="settings.html" class="nav-item active">
+<i data-lucide="settings" class="nav-icon"></i>
+Settings
+</a>
 
 </div>
 
@@ -52,6 +85,10 @@
 
 <div class="top-navbar">
 
+<div class="hamburger-menu" onclick="toggleMobileSidebar()">
+<i data-lucide="menu" class="nav-icon"></i>
+</div>
+
 <h2>Settings</h2>
 
 <div>
@@ -64,6 +101,71 @@ Logout
 
 </div>
 
+<!-- Mobile Sidebar Overlay -->
+<div class="mobile-sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
+<!-- Mobile Sidebar -->
+<div class="mobile-sidebar" id="mobileSidebar">
+
+<button class="close-sidebar" onclick="toggleMobileSidebar()">
+<i data-lucide="x" class="nav-icon"></i>
+</button>
+
+<div class="sidebar-header">
+<img src="../assets/Logo.jpeg" class="logo-img">
+<h3>Margadarshak AI</h3>
+</div>
+
+<div class="sidebar-nav">
+
+<a href="dashboard.html" class="nav-item">
+<i data-lucide="layout-dashboard" class="nav-icon"></i>
+Dashboard
+</a>
+<a href="assessment.html" class="nav-item">
+<i data-lucide="clipboard-check" class="nav-icon"></i>
+Assessment
+</a>
+<a href="tracker.html" class="nav-item">
+<i data-lucide="target" class="nav-icon"></i>
+Tracker
+</a>
+<a href="roadmap.html" class="nav-item">
+<i data-lucide="map" class="nav-icon"></i>
+Roadmap
+</a>
+<a href="resume.html" class="nav-item">
+<i data-lucide="file-text" class="nav-icon"></i>
+Resume
+</a>
+<a href="interview.html" class="nav-item">
+<i data-lucide="message-square" class="nav-icon"></i>
+Interview
+</a>
+<a href="mentor.html" class="nav-item">
+<i data-lucide="mic" class="nav-icon"></i>
+English Mentor
+</a>
+<a href="teams.html" class="nav-item">
+<i data-lucide="users" class="nav-icon"></i>
+Teams
+</a>
+<a href="community.html" class="nav-item">
+<i data-lucide="globe" class="nav-icon"></i>
+Community
+</a>
+<a href="profile.html" class="nav-item">
+<i data-lucide="user" class="nav-icon"></i>
+Profile
+</a>
+<a href="settings.html" class="nav-item active">
+<i data-lucide="settings" class="nav-icon"></i>
+Settings
+</a>
+
+</div>
+
+</div>
 
 <!-- Profile Settings -->
 
@@ -203,6 +305,15 @@ localStorage.removeItem("token")
 window.location.href="login.html"
 
 }
+
+function toggleMobileSidebar(){
+const sidebar = document.getElementById("mobileSidebar");
+const overlay = document.querySelector(".mobile-sidebar-overlay");
+sidebar.classList.toggle("active");
+overlay.classList.toggle("active");
+}
+
+lucide.createIcons();
 
 </script>
 
