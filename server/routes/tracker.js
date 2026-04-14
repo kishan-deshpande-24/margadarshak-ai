@@ -6,14 +6,17 @@ const {
 
 getTracker,
 addCompany,
-deleteCompany
+deleteCompany,
+updateStatus
 
-} = require("../controllers/trackerCOntroller.js")
+} = require("../controllers/trackerController.js")
 
 router.get("/", getTracker)
 
 router.post("/", addCompany)
 
 router.delete("/:id", deleteCompany)
+
+router.put("/:id", updateStatus)
 
 module.exports = router

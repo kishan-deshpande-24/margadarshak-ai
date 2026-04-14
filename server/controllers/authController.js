@@ -19,6 +19,7 @@ email,
 password,
 
 options:{
+emailConfirm: false,
 data:{
 name
 }

@@ -1,166 +1,280 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>AI Roadmap - Margadarshak AI</title>
+    <title>AI Roadmap - Margadarshak AI</title>
 
-<link rel="stylesheet" href="../css/style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
 
 </head>
 
 <body>
 
-<div class="app-container">
+    <div class="app-container">
 
-<!-- Sidebar -->
+        <!-- Sidebar -->
 
-<div class="sidebar">
+        <div class="sidebar">
 
-<div class="sidebar-header">
-<img src="../assets/Logo.jpeg" class="logo-img">
-<h3>Margadarshak AI</h3>
-</div>
+            <div class="sidebar-header">
+                <img src="../assets/Logo.jpeg" class="logo-img">
+                <h3>Margadarshak AI</h3>
+            </div>
 
-<div class="sidebar-nav">
+            <div class="sidebar-nav">
 
-<a href="dashboard.html" class="nav-item">Dashboard</a>
-<a href="assessment.html" class="nav-item">Assessment</a>
-<a href="tracker.html" class="nav-item">Tracker</a>
-<a href="roadmap.html" class="nav-item active">Roadmap</a>
-<a href="resume.html" class="nav-item">Resume</a>
-<a href="interview.html" class="nav-item">Interview</a>
-<a href="mentor.html" class="nav-item">English Mentor</a>
-<a href="teams.html" class="nav-item">Teams</a>
-<a href="community.html" class="nav-item">Community</a>
-<a href="profile.html" class="nav-item">Profile</a>
+                <a href="dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard" class="nav-icon"></i>
+                    Dashboard
+                </a>
+                <a href="assessment.html" class="nav-item">
+                    <i data-lucide="clipboard-check" class="nav-icon"></i>
+                    Assessment
+                </a>
+                <a href="tracker.html" class="nav-item">
+                    <i data-lucide="target" class="nav-icon"></i>
+                    Tracker
+                </a>
+                <a href="roadmap.html" class="nav-item active">
+                    <i data-lucide="map" class="nav-icon"></i>
+                    Roadmap
+                </a>
+                <a href="resume.html" class="nav-item">
+                    <i data-lucide="file-text" class="nav-icon"></i>
+                    Resume
+                </a>
+                <a href="interview.html" class="nav-item">
+                    <i data-lucide="message-square" class="nav-icon"></i>
+                    Interview
+                </a>
+                <a href="mentor.html" class="nav-item">
+                    <i data-lucide="mic" class="nav-icon"></i>
+                    English Mentor
+                </a>
+                <a href="teams.html" class="nav-item">
+                    <i data-lucide="users" class="nav-icon"></i>
+                    Teams
+                </a>
+                <a href="community.html" class="nav-item">
+                    <i data-lucide="globe" class="nav-icon"></i>
+                    Community
+                </a>
+                <a href="profile.html" class="nav-item">
+                    <i data-lucide="user" class="nav-icon"></i>
+                    Profile
+                </a>
+                <a href="settings.html" class="nav-item">
+                    <i data-lucide="settings" class="nav-icon"></i>
+                    Settings
+                </a>
 
-</div>
+            </div>
 
-</div>
-
-
-<!-- Main Content -->
-
-<div class="main-content">
-
-<!-- Navbar -->
-
-<div class="top-navbar">
-
-<h2>AI Career Roadmap</h2>
-
-<div>
-
-<button class="btn btn-secondary" onclick="generateRoadmap()">
-Generate New Roadmap
-</button>
-
-<button class="btn btn-primary" onclick="downloadRoadmap()">
-Download PDF
-</button>
-
-</div>
-
-</div>
-
-
-<!-- Career Info -->
-
-<div class="glass-card animate-fade-in">
-
-<h3>Your Career Path</h3>
-
-<h2 id="careerTitle">Loading...</h2>
-
-<p id="careerDescription"></p>
-
-</div>
+        </div>
 
 
-<!-- Progress -->
+        <!-- Main Content -->
 
-<div 
-class="glass-card"
-style="margin-top:20px"
->
+        <div class="main-content">
 
-<h3>Roadmap Progress</h3>
+            <!-- Mobile Sidebar Overlay -->
+            <div class="mobile-sidebar-overlay" onclick="toggleMobileSidebar()"></div>
 
-<div style="background:rgba(255,255,255,0.1);height:10px;border-radius:10px">
+            <!-- Mobile Sidebar -->
+            <div class="mobile-sidebar" id="mobileSidebar">
 
-<div 
-id="progressBar"
-style="height:100%;width:0%;background:linear-gradient(135deg,#4facfe,#00f2fe);border-radius:10px"
->
+                <button class="close-sidebar" onclick="toggleMobileSidebar()">
+                    <i data-lucide="x" class="nav-icon"></i>
+                </button>
 
-</div>
+                <div class="sidebar-header">
+                    <img src="../assets/Logo.jpeg" class="logo-img">
+                    <h3>Margadarshak AI</h3>
+                </div>
 
-</div>
+                <div class="sidebar-nav">
 
-<span id="progressText">0%</span>
+                    <a href="dashboard.html" class="nav-item">
+                        <i data-lucide="layout-dashboard" class="nav-icon"></i>
+                        Dashboard
+                    </a>
+                    <a href="assessment.html" class="nav-item">
+                        <i data-lucide="clipboard-check" class="nav-icon"></i>
+                        Assessment
+                    </a>
+                    <a href="tracker.html" class="nav-item">
+                        <i data-lucide="target" class="nav-icon"></i>
+                        Tracker
+                    </a>
+                    <a href="roadmap.html" class="nav-item active">
+                        <i data-lucide="map" class="nav-icon"></i>
+                        Roadmap
+                    </a>
+                    <a href="resume.html" class="nav-item">
+                        <i data-lucide="file-text" class="nav-icon"></i>
+                        Resume
+                    </a>
+                    <a href="interview.html" class="nav-item">
+                        <i data-lucide="message-square" class="nav-icon"></i>
+                        Interview
+                    </a>
+                    <a href="mentor.html" class="nav-item">
+                        <i data-lucide="mic" class="nav-icon"></i>
+                        English Mentor
+                    </a>
+                    <a href="teams.html" class="nav-item">
+                        <i data-lucide="users" class="nav-icon"></i>
+                        Teams
+                    </a>
+                    <a href="community.html" class="nav-item">
+                        <i data-lucide="globe" class="nav-icon"></i>
+                        Community
+                    </a>
+                    <a href="profile.html" class="nav-item">
+                        <i data-lucide="user" class="nav-icon"></i>
+                        Profile
+                    </a>
+                    <a href="settings.html" class="nav-item">
+                        <i data-lucide="settings" class="nav-icon"></i>
+                        Settings
+                    </a>
 
-</div>
+                </div>
+
+            </div>
+
+            <!-- Navbar -->
+
+            <div class="top-navbar">
+
+                <div class="hamburger-menu" onclick="toggleMobileSidebar()">
+                    <i data-lucide="menu" class="nav-icon"></i>
+                </div>
+
+                <h2>AI Career Roadmap</h2>
+
+                <div>
+
+                    <button class="btn btn-secondary" onclick="generateRoadmap()">
+                        Generate New Roadmap
+                    </button>
+
+                    <button class="btn btn-primary" onclick="downloadRoadmap()">
+                        Download PDF
+                    </button>
+
+                </div>
+
+            </div>
 
 
-<!-- Roadmap Steps -->
+            <!-- Career Info -->
 
-<div 
-id="roadmapSteps"
-class="dashboard-grid"
-style="margin-top:20px"
->
+            <div class="glass-card animate-fade-in">
 
-</div>
+                <h3>Your Learning Path</h3>
 
+                <h2 id="careerTitle">Enter a skill to get started</h2>
 
-<!-- Skills Section -->
+                <p id="careerDescription">Type a skill below to generate your personalized learning roadmap</p>
 
-<div 
-class="glass-card"
-style="margin-top:20px"
->
+                <div style="margin-top:20px;display:flex;gap:10px">
 
-<h3>Skills To Learn</h3>
+                    <input 
+                    type="text" 
+                    id="skillInput" 
+                    placeholder="Enter a skill (e.g., Python, Machine Learning, Web Development)"
+                    style="flex:1;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:white;font-size:14px"
+                    >
 
-<div id="skillsList"></div>
+                    <button class="btn btn-primary" onclick="generateRoadmap()">
+                        Generate Roadmap
+                    </button>
 
-</div>
+                </div>
 
-
-<!-- Projects Section -->
-
-<div 
-class="glass-card"
-style="margin-top:20px"
->
-
-<h3>Recommended Projects</h3>
-
-<div id="projectsList"></div>
-
-</div>
+            </div>
 
 
-</div>
+            <!-- Progress -->
 
-</div>
+            <div id="progressSection" class="glass-card" style="margin-top:20px;display:none">
 
-<script src="../js/layout.js"></script>
-<script src="../js/roadmap.js"></script>
+                <h3>Roadmap Progress</h3>
 
-<script>
+                <div style="background:rgba(255,255,255,0.1);height:10px;border-radius:10px;margin-top:10px">
 
-function downloadRoadmap(){
+                    <div
+                    id="progressBar"
+                    style="height:100%;width:0%;background:linear-gradient(135deg,#4facfe,#00f2fe);border-radius:10px;transition:width 0.3s ease"
+                    >
 
-window.location.href="/api/roadmap/download"
+                    </div>
 
-}
+                </div>
 
-</script>
+                <span id="progressText" style="margin-top:10px;display:block">0%</span>
+
+            </div>
+
+
+            <!-- Roadmap Steps -->
+
+            <div id="roadmapSteps" class="dashboard-grid" style="margin-top:20px">
+
+            </div>
+
+
+            <!-- Skills Section -->
+
+            <div class="glass-card" style="margin-top:20px">
+
+                <h3>Skills To Learn</h3>
+
+                <div id="skillsList"></div>
+
+            </div>
+
+
+            <!-- Projects Section -->
+
+            <div class="glass-card" style="margin-top:20px">
+
+                <h3>Recommended Projects</h3>
+
+                <div id="projectsList"></div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+    <script src="../js/layout.js"></script>
+    <script src="../js/roadmap.js"></script>
+
+    <script>
+
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById("mobileSidebar");
+            const overlay = document.querySelector(".mobile-sidebar-overlay");
+            sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
+        }
+
+        // Load saved roadmap on page load
+        loadSavedRoadmap();
+
+        lucide.createIcons();
+
+    </script>
 
 </body>
+
 </html>
