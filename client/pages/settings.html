@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Settings - Margadarshak AI</title>
+
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="app-container">
+
+<!-- Sidebar -->
+
+<div class="sidebar">
+
+<div class="sidebar-header">
+<img src="../assets/Logo.jpeg" class="logo-img">
+<h3>Margadarshak AI</h3>
+</div>
+
+<div class="sidebar-nav">
+
+<a href="dashboard.html" class="nav-item">Dashboard</a>
+<a href="assessment.html" class="nav-item">Assessment</a>
+<a href="tracker.html" class="nav-item">Tracker</a>
+<a href="roadmap.html" class="nav-item">Roadmap</a>
+<a href="resume.html" class="nav-item">Resume</a>
+<a href="interview.html" class="nav-item">Interview</a>
+<a href="mentor.html" class="nav-item">English Mentor</a>
+<a href="teams.html" class="nav-item">Teams</a>
+<a href="community.html" class="nav-item">Community</a>
+<a href="profile.html" class="nav-item">Profile</a>
+<a href="settings.html" class="nav-item active">Settings</a>
+
+</div>
+
+</div>
+
+
+<!-- Main Content -->
+
+<div class="main-content">
+
+<!-- Top Navbar -->
+
+<div class="top-navbar">
+
+<h2>Settings</h2>
+
+<div>
+
+<button class="btn btn-danger" onclick="logout()">
+Logout
+</button>
+
+</div>
+
+</div>
+
+
+<!-- Profile Settings -->
+
+<div class="glass-card animate-fade-in">
+
+<h3>Profile Settings</h3>
+
+<input 
+type="text"
+id="name"
+placeholder="Full Name"
+style="margin-top:15px"
+>
+
+<input 
+type="email"
+id="email"
+placeholder="Email"
+style="margin-top:10px"
+>
+
+<button 
+class="btn btn-primary"
+style="margin-top:15px"
+onclick="saveProfile()"
+>
+
+Save Profile
+
+</button>
+
+</div>
+
+
+<!-- Password -->
+
+<div class="glass-card" style="margin-top:20px">
+
+<h3>Change Password</h3>
+
+<input 
+type="password"
+id="oldPassword"
+placeholder="Old Password"
+style="margin-top:10px"
+>
+
+<input 
+type="password"
+id="newPassword"
+placeholder="New Password"
+style="margin-top:10px"
+>
+
+<button 
+class="btn btn-primary"
+style="margin-top:15px"
+onclick="changePassword()"
+>
+
+Change Password
+
+</button>
+
+</div>
+
+
+<!-- Theme Settings -->
+
+<div class="glass-card" style="margin-top:20px">
+
+<h3>Theme Settings</h3>
+
+<select id="themeSelect">
+
+<option value="dark">Dark Theme</option>
+<option value="light">Light Theme</option>
+
+</select>
+
+<button 
+class="btn btn-primary"
+style="margin-top:15px"
+onclick="changeTheme()"
+>
+
+Apply Theme
+
+</button>
+
+</div>
+
+
+<!-- Notifications -->
+
+<div class="glass-card" style="margin-top:20px">
+
+<h3>Notifications</h3>
+
+<label>
+<input type="checkbox" id="emailNotify">
+Email Notifications
+</label>
+
+<br>
+
+<label>
+<input type="checkbox" id="aiNotify">
+AI Recommendations
+</label>
+
+<button 
+class="btn btn-primary"
+style="margin-top:15px"
+onclick="saveNotifications()"
+>
+
+Save
+
+</button>
+
+</div>
+
+
+</div>
+
+</div>
+
+<script src="../js/layout.js"></script>
+<script src="../js/settings.js"></script>
+
+<script>
+
+function logout(){
+
+localStorage.removeItem("token")
+window.location.href="login.html"
+
+}
+
+</script>
+
+</body>
+</html>

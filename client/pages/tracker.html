@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Company Tracker - Margadarshak AI</title>
+
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="app-container">
+
+<!-- Sidebar -->
+
+<div class="sidebar">
+
+<div class="sidebar-header">
+<img src="../assets/Logo.jpeg" class="logo-img">
+<h3>Margadarshak AI</h3>
+</div>
+
+<div class="sidebar-nav">
+
+<a href="dashboard.html" class="nav-item">Dashboard</a>
+<a href="assessment.html" class="nav-item">Assessment</a>
+<a href="tracker.html" class="nav-item active">Tracker</a>
+<a href="roadmap.html" class="nav-item">Roadmap</a>
+<a href="resume.html" class="nav-item">Resume</a>
+<a href="interview.html" class="nav-item">Interview</a>
+<a href="mentor.html" class="nav-item">English Mentor</a>
+<a href="teams.html" class="nav-item">Teams</a>
+<a href="community.html" class="nav-item">Community</a>
+<a href="profile.html" class="nav-item">Profile</a>
+
+</div>
+
+</div>
+
+
+<!-- Main Content -->
+
+<div class="main-content">
+
+<!-- Navbar -->
+
+<div class="top-navbar">
+
+<h2>Company Tracker</h2>
+
+<div>
+
+<button 
+class="btn btn-primary"
+onclick="showAddForm()"
+>
+
+Add Company
+
+</button>
+
+</div>
+
+</div>
+
+
+<!-- Add Form -->
+
+<div 
+id="addForm"
+class="glass-card"
+style="display:none"
+>
+
+<h3>Add Company</h3>
+
+<input 
+type="text"
+id="company"
+placeholder="Company Name"
+style="margin-top:10px"
+>
+
+<input 
+type="text"
+id="role"
+placeholder="Role"
+style="margin-top:10px"
+>
+
+<select 
+id="status"
+style="margin-top:10px"
+>
+
+<option>Applied</option>
+<option>Interview</option>
+<option>Rejected</option>
+<option>Offer</option>
+
+</select>
+
+<button 
+class="btn btn-primary"
+style="margin-top:15px"
+onclick="addCompany()"
+>
+
+Add
+
+</button>
+
+</div>
+
+
+<!-- Tracker List -->
+
+<div 
+id="trackerContainer"
+class="dashboard-grid"
+style="margin-top:20px"
+>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="../js/layout.js"></script>
+<script src="../js/tracker.js"></script>
+
+<script>
+
+function showAddForm(){
+
+document.getElementById("addForm").style.display="block"
+
+}
+
+</script>
+
+</body>
+</html>

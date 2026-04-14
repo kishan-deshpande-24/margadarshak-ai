@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dashboard - Margadarshak AI</title>
+
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<div class="app-container">
+
+<!-- Sidebar -->
+
+<div class="sidebar">
+
+<div class="sidebar-header">
+<img src="../assets/Logo.jpeg" class="logo-img">
+<h3>Margadarshak AI</h3>
+</div>
+
+<div class="sidebar-nav">
+
+<a href="dashboard.html" class="nav-item active">Dashboard</a>
+<a href="assessment.html" class="nav-item">Assessment</a>
+<a href="tracker.html" class="nav-item">Tracker</a>
+<a href="roadmap.html" class="nav-item">Roadmap</a>
+<a href="resume.html" class="nav-item">Resume</a>
+<a href="interview.html" class="nav-item">Interview</a>
+<a href="mentor.html" class="nav-item">English Mentor</a>
+<a href="teams.html" class="nav-item">Teams</a>
+<a href="community.html" class="nav-item">Community</a>
+<a href="profile.html" class="nav-item">Profile</a>
+
+</div>
+
+</div>
+
+<!-- Main -->
+
+<div class="main-content">
+
+<!-- Top Navbar -->
+
+<div class="top-navbar">
+
+<h2>AI Command Center</h2>
+
+<div>
+
+<span id="userName"></span>
+
+<button class="btn btn-danger" onclick="logout()">
+Logout
+</button>
+
+</div>
+
+</div>
+
+
+<!-- Stats Cards -->
+
+<div class="dashboard-grid">
+
+<div class="glass-card">
+
+<h3>Career Progress</h3>
+<h2 id="careerProgress">0%</h2>
+
+</div>
+
+<div class="glass-card">
+
+<h3>Skills Completed</h3>
+<h2 id="skillsCompleted">0</h2>
+
+</div>
+
+<div class="glass-card">
+
+<h3>Interview Score</h3>
+<h2 id="interviewScore">0</h2>
+
+</div>
+
+<div class="glass-card">
+
+<h3>Resume Score</h3>
+<h2 id="resumeScore">0</h2>
+
+</div>
+
+</div>
+
+
+<!-- Charts -->
+
+<div class="dashboard-grid" style="margin-top:20px">
+
+<div class="glass-card">
+
+<h3>Skill Progress</h3>
+
+<canvas id="skillChart"></canvas>
+
+</div>
+
+<div class="glass-card">
+
+<h3>Interview Performance</h3>
+
+<canvas id="interviewChart"></canvas>
+
+</div>
+
+</div>
+
+
+<!-- AI Recommendations -->
+
+<div class="glass-card" style="margin-top:20px">
+
+<h3>AI Recommendations</h3>
+
+<div id="recommendations">
+
+Loading AI suggestions...
+
+</div>
+
+</div>
+
+
+<!-- Quick Actions -->
+
+<div class="glass-card" style="margin-top:20px">
+
+<h3>Quick Actions</h3>
+
+<div class="dashboard-grid">
+
+<button 
+class="btn btn-primary"
+onclick="go('assessment.html')"
+>
+
+Take Assessment
+
+</button>
+
+<button 
+class="btn btn-primary"
+onclick="go('roadmap.html')"
+>
+
+View Roadmap
+
+</button>
+
+<button 
+class="btn btn-primary"
+onclick="go('interview.html')"
+>
+
+Start Interview
+
+</button>
+
+<button 
+class="btn btn-primary"
+onclick="go('mentor.html')"
+>
+
+English Mentor
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="../js/dashboard.js"></script>
+
+<script>
+
+function go(page){
+window.location.href = page
+}
+
+function logout(){
+localStorage.removeItem("token")
+window.location.href="login.html"
+}
+
+</script>
+
+</body>
+</html>

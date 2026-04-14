@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AI Roadmap - Margadarshak AI</title>
+
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="app-container">
+
+<!-- Sidebar -->
+
+<div class="sidebar">
+
+<div class="sidebar-header">
+<img src="../assets/Logo.jpeg" class="logo-img">
+<h3>Margadarshak AI</h3>
+</div>
+
+<div class="sidebar-nav">
+
+<a href="dashboard.html" class="nav-item">Dashboard</a>
+<a href="assessment.html" class="nav-item">Assessment</a>
+<a href="tracker.html" class="nav-item">Tracker</a>
+<a href="roadmap.html" class="nav-item active">Roadmap</a>
+<a href="resume.html" class="nav-item">Resume</a>
+<a href="interview.html" class="nav-item">Interview</a>
+<a href="mentor.html" class="nav-item">English Mentor</a>
+<a href="teams.html" class="nav-item">Teams</a>
+<a href="community.html" class="nav-item">Community</a>
+<a href="profile.html" class="nav-item">Profile</a>
+
+</div>
+
+</div>
+
+
+<!-- Main Content -->
+
+<div class="main-content">
+
+<!-- Navbar -->
+
+<div class="top-navbar">
+
+<h2>AI Career Roadmap</h2>
+
+<div>
+
+<button class="btn btn-secondary" onclick="generateRoadmap()">
+Generate New Roadmap
+</button>
+
+<button class="btn btn-primary" onclick="downloadRoadmap()">
+Download PDF
+</button>
+
+</div>
+
+</div>
+
+
+<!-- Career Info -->
+
+<div class="glass-card animate-fade-in">
+
+<h3>Your Career Path</h3>
+
+<h2 id="careerTitle">Loading...</h2>
+
+<p id="careerDescription"></p>
+
+</div>
+
+
+<!-- Progress -->
+
+<div 
+class="glass-card"
+style="margin-top:20px"
+>
+
+<h3>Roadmap Progress</h3>
+
+<div style="background:rgba(255,255,255,0.1);height:10px;border-radius:10px">
+
+<div 
+id="progressBar"
+style="height:100%;width:0%;background:linear-gradient(135deg,#4facfe,#00f2fe);border-radius:10px"
+>
+
+</div>
+
+</div>
+
+<span id="progressText">0%</span>
+
+</div>
+
+
+<!-- Roadmap Steps -->
+
+<div 
+id="roadmapSteps"
+class="dashboard-grid"
+style="margin-top:20px"
+>
+
+</div>
+
+
+<!-- Skills Section -->
+
+<div 
+class="glass-card"
+style="margin-top:20px"
+>
+
+<h3>Skills To Learn</h3>
+
+<div id="skillsList"></div>
+
+</div>
+
+
+<!-- Projects Section -->
+
+<div 
+class="glass-card"
+style="margin-top:20px"
+>
+
+<h3>Recommended Projects</h3>
+
+<div id="projectsList"></div>
+
+</div>
+
+
+</div>
+
+</div>
+
+<script src="../js/layout.js"></script>
+<script src="../js/roadmap.js"></script>
+
+<script>
+
+function downloadRoadmap(){
+
+window.location.href="/api/roadmap/download"
+
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Profile - Margadarshak AI</title>
+
+<link rel="stylesheet" href="../css/style.css">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<div class="app-container">
+
+<!-- Sidebar -->
+
+<div class="sidebar">
+
+<div class="sidebar-header">
+<img src="../assets/Logo.jpeg" class="logo-img">
+<h3>Margadarshak AI</h3>
+</div>
+
+<div class="sidebar-nav">
+
+<a href="dashboard.html" class="nav-item">Dashboard</a>
+<a href="assessment.html" class="nav-item">Assessment</a>
+<a href="tracker.html" class="nav-item">Tracker</a>
+<a href="roadmap.html" class="nav-item">Roadmap</a>
+<a href="resume.html" class="nav-item">Resume</a>
+<a href="interview.html" class="nav-item">Interview</a>
+<a href="mentor.html" class="nav-item">English Mentor</a>
+<a href="teams.html" class="nav-item">Teams</a>
+<a href="community.html" class="nav-item">Community</a>
+<a href="profile.html" class="nav-item active">Profile</a>
+
+</div>
+
+</div>
+
+
+<!-- Main Content -->
+
+<div class="main-content">
+
+<!-- Navbar -->
+
+<div class="top-navbar">
+
+<h2>User Profile</h2>
+
+<div>
+
+<button class="btn btn-secondary" onclick="window.location.href='settings.html'">
+Settings
+</button>
+
+<button class="btn btn-danger" onclick="logout()">
+Logout
+</button>
+
+</div>
+
+</div>
+
+
+<!-- Profile Card -->
+
+<div class="glass-card animate-fade-in">
+
+<div style="display:flex;align-items:center;gap:20px">
+
+<img 
+src="https://ui-avatars.com/api/?name=User&background=4facfe&color=fff&size=100"
+style="border-radius:50%"
+>
+
+<div>
+
+<h2 id="userName">Loading...</h2>
+<p id="userEmail">Loading...</p>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- Stats -->
+
+<div class="dashboard-grid" style="margin-top:20px">
+
+<div class="glass-card">
+
+<h3>Career Progress</h3>
+
+<h2 id="careerProgress">0%</h2>
+
+</div>
+
+<div class="glass-card">
+
+<h3>Resume Score</h3>
+
+<h2 id="resumeScore">0</h2>
+
+</div>
+
+<div class="glass-card">
+
+<h3>Interview Score</h3>
+
+<h2 id="interviewScore">0</h2>
+
+</div>
+
+<div class="glass-card">
+
+<h3>Skills Learned</h3>
+
+<h2 id="skillsCount">0</h2>
+
+</div>
+
+</div>
+
+
+<!-- Charts -->
+
+<div class="dashboard-grid" style="margin-top:20px">
+
+<div class="glass-card">
+
+<h3>Progress Chart</h3>
+
+<canvas id="progressChart"></canvas>
+
+</div>
+
+<div class="glass-card">
+
+<h3>Skills Chart</h3>
+
+<canvas id="skillsChart"></canvas>
+
+</div>
+
+</div>
+
+
+</div>
+
+</div>
+
+<script src="../js/layout.js"></script>
+<script src="../js/profile.js"></script>
+
+<script>
+
+function logout(){
+
+localStorage.removeItem("token")
+window.location.href="login.html"
+
+}
+
+</script>
+
+</body>
+</html>

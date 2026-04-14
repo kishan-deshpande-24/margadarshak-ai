@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Interest Assessment - Margadarshak AI</title>
+
+<link rel="stylesheet" href="../css/style.css">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="app-container">
+
+<!-- Sidebar -->
+
+<div class="sidebar">
+
+<div class="sidebar-header">
+<img src="../assets/Logo.jpeg" class="logo-img">
+<h3>Margadarshak AI</h3>
+</div>
+
+<div class="sidebar-nav">
+
+<a href="dashboard.html" class="nav-item">Dashboard</a>
+<a href="assessment.html" class="nav-item active">Assessment</a>
+<a href="tracker.html" class="nav-item">Tracker</a>
+<a href="roadmap.html" class="nav-item">Roadmap</a>
+<a href="resume.html" class="nav-item">Resume</a>
+<a href="interview.html" class="nav-item">Interview</a>
+<a href="mentor.html" class="nav-item">English Mentor</a>
+<a href="teams.html" class="nav-item">Teams</a>
+<a href="community.html" class="nav-item">Community</a>
+<a href="profile.html" class="nav-item">Profile</a>
+
+</div>
+
+</div>
+
+
+<!-- Main Content -->
+
+<div class="main-content">
+
+<!-- Top Navbar -->
+
+<div class="top-navbar">
+
+<h2>AI Career Assessment</h2>
+
+<div>
+
+<button class="btn btn-secondary" onclick="window.location.href='settings.html'">
+Settings
+</button>
+
+<button class="btn btn-danger" onclick="logout()">
+Logout
+</button>
+
+</div>
+
+</div>
+
+
+<!-- Start Screen -->
+
+<div id="start-screen" class="glass-card animate-fade-in">
+
+<h2>Discover Your Career Path</h2>
+
+<p>
+Answer a few AI generated questions to discover your ideal career.
+</p>
+
+<button class="btn btn-primary" onclick="startAssessment()">
+Start Assessment
+</button>
+
+</div>
+
+
+<!-- Progress -->
+
+<div id="progress-container" class="glass-card" style="display:none">
+
+<div style="display:flex;justify-content:space-between">
+
+<span id="question-number"></span>
+<span id="progress-percent"></span>
+
+</div>
+
+<div style="background:rgba(255,255,255,0.1);height:8px;border-radius:10px;margin-top:10px">
+
+<div id="progress-bar" style="height:100%;width:0%;background:linear-gradient(135deg,#4facfe,#00f2fe);border-radius:10px"></div>
+
+</div>
+
+</div>
+
+
+<!-- Question Screen -->
+
+<div id="question-screen" class="glass-card" style="display:none">
+
+<h2 id="question"></h2>
+
+<div id="options" class="dashboard-grid"></div>
+
+</div>
+
+
+<!-- Result Screen -->
+
+<div id="result-screen" class="glass-card" style="display:none">
+
+<h2>Your Career Recommendation</h2>
+
+<div id="result"></div>
+
+<button class="btn btn-primary" onclick="goToRoadmap()">
+View Roadmap
+</button>
+
+</div>
+
+
+</div>
+
+</div>
+
+<script src="../js/layout.js"></script>
+
+<script>
+
+let currentQuestion = 0
+let questions = []
+let answers = []
+
+async function startAssessment(){
+
+document.getElementById("start-screen").style.display="none"
+document.getElementById("progress-container").style.display="block"
+document.getElementById("question-screen").style.display="block"
+
+await loadQuestions()
+
+showQuestion()
+
+}
+
+async function loadQuestions(){
+
+const res = await fetch("/api/assessment")
+
+const data = await res.json()
+
+questions = data.questions || []
+
+}
+
+function showQuestion(){
+
+const q = questions[currentQuestion]
+
+document.getElementById("question-number").innerText =
+`Question ${currentQuestion+1} of ${questions.length}`
+
+document.getElementById("progress-percent").innerText =
+`${Math.round((currentQuestion/questions.length)*100)}%`
+
+document.getElementById("progress-bar").style.width =
+`${(currentQuestion/questions.length)*100}%`
+
+document.getElementById("question").innerText = q.question
+
+const options = document.getElementById("options")
+
+options.innerHTML=""
+
+q.options.forEach(option=>{
+
+const btn = document.createElement("button")
+
+btn.className="btn btn-secondary"
+
+btn.innerText = option
+
+btn.onclick = ()=> selectAnswer(option)
+
+options.appendChild(btn)
+
+})
+
+}
+
+function selectAnswer(answer){
+
+answers.push(answer)
+
+currentQuestion++
+
+if(currentQuestion < questions.length){
+
+showQuestion()
+
+}else{
+
+submitAssessment()
+
+}
+
+}
+
+async function submitAssessment(){
+
+const res = await fetch("/api/assessment/submit",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+answers
+})
+
+})
+
+const data = await res.json()
+
+document.getElementById("question-screen").style.display="none"
+document.getElementById("progress-container").style.display="none"
+document.getElementById("result-screen").style.display="block"
+
+document.getElementById("result").innerHTML = data.result
+
+}
+
+function goToRoadmap(){
+
+window.location.href="roadmap.html"
+
+}
+
+function logout(){
+
+localStorage.removeItem("token")
+
+window.location.href="login.html"
+
+}
+
+</script>
+
+</body>
+</html>

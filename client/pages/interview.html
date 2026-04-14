@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AI Interview - Margadarshak AI</title>
+
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="app-container">
+
+<!-- Sidebar -->
+
+<div class="sidebar">
+
+<div class="sidebar-header">
+<img src="../assets/Logo.jpeg" class="logo-img">
+<h3>Margadarshak AI</h3>
+</div>
+
+<div class="sidebar-nav">
+
+<a href="dashboard.html" class="nav-item">Dashboard</a>
+<a href="assessment.html" class="nav-item">Assessment</a>
+<a href="tracker.html" class="nav-item">Tracker</a>
+<a href="roadmap.html" class="nav-item">Roadmap</a>
+<a href="resume.html" class="nav-item">Resume</a>
+<a href="interview.html" class="nav-item active">Interview</a>
+<a href="mentor.html" class="nav-item">English Mentor</a>
+<a href="teams.html" class="nav-item">Teams</a>
+<a href="community.html" class="nav-item">Community</a>
+<a href="profile.html" class="nav-item">Profile</a>
+
+</div>
+
+</div>
+
+
+<!-- Main -->
+
+<div class="main-content">
+
+<!-- Top Navbar -->
+
+<div class="top-navbar">
+
+<h2>AI Interview Simulator</h2>
+
+<div>
+
+<button class="btn btn-danger" onclick="logout()">
+End Interview
+</button>
+
+</div>
+
+</div>
+
+
+<!-- Setup Screen -->
+
+<div id="setupScreen" class="glass-card">
+
+<h3>Select Interview Role</h3>
+
+<select id="roleSelect">
+
+<option>Frontend Developer</option>
+<option>Backend Developer</option>
+<option>Full Stack Developer</option>
+<option>Data Scientist</option>
+<option>AI Engineer</option>
+
+</select>
+
+<button 
+class="btn btn-primary"
+style="margin-top:15px"
+onclick="startInterview()"
+>
+
+Start Interview
+
+</button>
+
+</div>
+
+
+<!-- Interview Room -->
+
+<div id="interviewRoom" style="display:none">
+
+<div class="dashboard-grid">
+
+<!-- Video Section -->
+
+<div class="glass-card">
+
+<h3>Camera</h3>
+
+<video 
+id="camera"
+autoplay
+muted
+style="width:100%;border-radius:10px"
+></video>
+
+<div style="margin-top:10px">
+
+<span id="timer">05:00</span>
+
+</div>
+
+</div>
+
+
+<!-- Question Section -->
+
+<div class="glass-card">
+
+<h3>AI Interviewer</h3>
+
+<div id="question">
+
+Waiting for question...
+
+</div>
+
+<button 
+class="btn btn-primary"
+style="margin-top:15px"
+onclick="nextQuestion()"
+>
+
+Next Question
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- Results -->
+
+<div id="resultScreen" style="display:none">
+
+<div class="glass-card">
+
+<h2>Interview Complete</h2>
+
+<h3 id="score">Score: 0</h3>
+
+<div id="feedback"></div>
+
+<button 
+class="btn btn-primary"
+onclick="downloadReport()"
+>
+
+Download Report
+
+</button>
+
+</div>
+
+</div>
+
+
+</div>
+
+</div>
+
+
+<script src="../js/layout.js"></script>
+<script src="../js/interview.js"></script>
+<script src="../js/cheating-detection.js"></script>
+
+<script>
+
+function logout(){
+
+localStorage.removeItem("token")
+window.location.href="login.html"
+
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Resume Analyzer - Margadarshak AI</title>
+
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="app-container">
+
+<!-- Sidebar -->
+
+<div class="sidebar">
+
+<div class="sidebar-header">
+<img src="../assets/Logo.jpeg" class="logo-img">
+<h3>Margadarshak AI</h3>
+</div>
+
+<div class="sidebar-nav">
+
+<a href="dashboard.html" class="nav-item">Dashboard</a>
+<a href="assessment.html" class="nav-item">Assessment</a>
+<a href="tracker.html" class="nav-item">Tracker</a>
+<a href="roadmap.html" class="nav-item">Roadmap</a>
+<a href="resume.html" class="nav-item active">Resume</a>
+<a href="interview.html" class="nav-item">Interview</a>
+<a href="mentor.html" class="nav-item">English Mentor</a>
+<a href="teams.html" class="nav-item">Teams</a>
+<a href="community.html" class="nav-item">Community</a>
+<a href="profile.html" class="nav-item">Profile</a>
+
+</div>
+
+</div>
+
+
+<!-- Main Content -->
+
+<div class="main-content">
+
+<!-- Top Navbar -->
+
+<div class="top-navbar">
+
+<h2>AI Resume Analyzer</h2>
+
+<div>
+
+<button class="btn btn-secondary" onclick="window.location.href='settings.html'">
+Settings
+</button>
+
+<button class="btn btn-danger" onclick="logout()">
+Logout
+</button>
+
+</div>
+
+</div>
+
+
+<!-- Upload Resume -->
+
+<div class="glass-card animate-fade-in">
+
+<h3>Upload Your Resume</h3>
+
+<input 
+type="file"
+id="resumeFile"
+accept=".pdf,.doc,.docx"
+style="margin-top:15px"
+>
+
+<button 
+class="btn btn-primary"
+style="margin-top:15px"
+onclick="analyzeResume()"
+>
+
+Analyze Resume
+
+</button>
+
+</div>
+
+
+<!-- Resume Score -->
+
+<div 
+class="dashboard-grid"
+style="margin-top:20px"
+>
+
+<div class="glass-card">
+
+<h3>Resume Score</h3>
+
+<h2 id="resumeScore">0</h2>
+
+</div>
+
+<div class="glass-card">
+
+<h3>ATS Score</h3>
+
+<h2 id="atsScore">0</h2>
+
+</div>
+
+<div class="glass-card">
+
+<h3>Skills Found</h3>
+
+<div id="skillsList"></div>
+
+</div>
+
+<div class="glass-card">
+
+<h3>Suggestions</h3>
+
+<div id="suggestions"></div>
+
+</div>
+
+</div>
+
+
+<!-- Detailed Feedback -->
+
+<div 
+class="glass-card"
+style="margin-top:20px"
+>
+
+<h3>AI Feedback</h3>
+
+<div id="feedback"></div>
+
+</div>
+
+
+</div>
+
+</div>
+
+<script src="../js/layout.js"></script>
+<script src="../js/resume.js"></script>
+
+<script>
+
+function logout(){
+
+localStorage.removeItem("token")
+window.location.href="login.html"
+
+}
+
+</script>
+
+</body>
+</html>
