@@ -1,286 +1,103 @@
-// ==============================
-// Margadarshak AI Team Finder
-// ==============================
+let currentTeam = null
 
-const token = localStorage.getItem("token")
+function getUserId(){
+  return localStorage.getItem("userId") || "user123"
+}
 
-
-// ==============================
-// Load Teams
-// ==============================
-
+// LOAD TEAMS
 async function loadTeams(){
+  const res = await fetch("/api/teams")
+  const data = await res.json()
 
-try{
+  const container = document.getElementById("teamsList")
 
-showLoader()
-
-const res = await fetch("/api/teams")
-
-const teams = await res.json()
-
-hideLoader()
-
-displayTeams(teams)
-
-}catch(error){
-
-console.error("Teams error",error)
-
-hideLoader()
-
+  container.innerHTML = data.teams.map(team => `
+    <div class="glass-card" style="display:flex;align-items:center;gap:10px">
+      <img src="${team.avatar}" width="40" style="border-radius:50%">
+      <div style="flex:1">
+        <b>${team.name}</b><br>
+        Code: ${team.invite_code}
+      </div>
+      <button onclick="selectTeam('${team.id}')">Open</button>
+    </div>
+  `).join("")
 }
 
-}
-
-
-// ==============================
-// Display Teams
-// ==============================
-
-function displayTeams(teams){
-
-const container =
-document.getElementById("teamsContainer")
-
-container.innerHTML = ""
-
-if(!teams.length){
-
-container.innerHTML =
-"<p>No teams available</p>"
-
-return
-
-}
-
-teams.forEach(team=>{
-
-const card =
-document.createElement("div")
-
-card.className =
-"glass-card team-card animate-fade-in"
-
-card.innerHTML = `
-
-<h3>${team.name}</h3>
-
-<p>${team.description}</p>
-
-<p><strong>Members:</strong> ${team.members.length}</p>
-
-<button 
-class="btn btn-primary"
-onclick="joinTeam('${team.id}')"
->
-
-Join Team
-
-</button>
-
-`
-
-container.appendChild(card)
-
-})
-
-}
-
-
-// ==============================
-// Create Team
-// ==============================
-
+// CREATE TEAM
 async function createTeam(){
+  const name = document.getElementById("teamName").value
 
-const name =
-document.getElementById("teamName").value
+  await fetch("/api/teams/create",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      name,
+      userId:getUserId()
+    })
+  })
 
-const description =
-document.getElementById("teamDesc").value
-
-if(!name || !description){
-
-showToast("Fill all fields")
-return
-
+  loadTeams()
 }
 
-try{
+// JOIN TEAM
+async function joinTeam(){
+  const code = document.getElementById("inviteCode").value
 
-showLoader()
+  await fetch("/api/teams/join-code",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      code,
+      userId:getUserId()
+    })
+  })
 
-await fetch("/api/teams",{
+  alert("Joined team")
+  loadTeams()
+}
 
-method:"POST",
+// SELECT TEAM
+function selectTeam(id){
+  currentTeam = id
+  loadMessages()
+  loadAnalytics()
+}
 
-headers:{
-"Content-Type":"application/json",
-Authorization: token
-},
+// SEND MESSAGE
+async function sendMessage(){
+  const text = document.getElementById("messageInput").value
 
-body:JSON.stringify({
+  await fetch(`/api/teams/${currentTeam}/message`,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      userId:getUserId(),
+      text
+    })
+  })
 
-name,
-description
+  document.getElementById("messageInput").value=""
+  loadMessages()
+}
 
-})
+// LOAD MESSAGES
+async function loadMessages(){
+  const res = await fetch(`/api/teams/${currentTeam}/messages`)
+  const data = await res.json()
 
-})
+  document.getElementById("chatBox").innerHTML =
+    data.messages.map(m=>`<div>${m.user_id}: ${m.text}</div>`).join("")
+}
 
-hideLoader()
+// ANALYTICS
+async function loadAnalytics(){
+  const res = await fetch(`/api/teams/${currentTeam}/analytics`)
+  const data = await res.json()
 
-showToast("Team created")
+  document.getElementById("analytics").innerHTML = `
+    Members: ${data.totalMembers}<br>
+    Messages: ${data.totalMessages}
+  `
+}
 
 loadTeams()
-
-}catch(error){
-
-console.error("Create error",error)
-
-hideLoader()
-
-}
-
-}
-
-
-// ==============================
-// Join Team
-// ==============================
-
-async function joinTeam(id){
-
-try{
-
-await fetch(`/api/teams/join/${id}`,{
-
-method:"POST",
-
-headers:{
-Authorization: token
-}
-
-})
-
-showToast("Joined team")
-
-loadTeams()
-
-}catch(error){
-
-console.error("Join error",error)
-
-}
-
-}
-
-
-// ==============================
-// Leave Team
-// ==============================
-
-async function leaveTeam(id){
-
-try{
-
-await fetch(`/api/teams/leave/${id}`,{
-
-method:"POST",
-
-headers:{
-Authorization: token
-}
-
-})
-
-showToast("Left team")
-
-loadTeams()
-
-}catch(error){
-
-console.error("Leave error",error)
-
-}
-
-}
-
-
-// ==============================
-// Loader
-// ==============================
-
-function showLoader(){
-
-let loader =
-document.getElementById("loader")
-
-if(!loader){
-
-loader =
-document.createElement("div")
-
-loader.id="loader"
-
-loader.innerHTML = `
-<div class="loader-spinner"></div>
-`
-
-document.body.appendChild(loader)
-
-}
-
-loader.style.display="flex"
-
-}
-
-
-function hideLoader(){
-
-const loader =
-document.getElementById("loader")
-
-if(loader){
-
-loader.style.display="none"
-
-}
-
-}
-
-
-// ==============================
-// Toast
-// ==============================
-
-function showToast(message){
-
-let toast =
-document.createElement("div")
-
-toast.className="toast"
-
-toast.innerText=message
-
-document.body.appendChild(toast)
-
-setTimeout(()=>{
-
-toast.remove()
-
-},3000)
-
-}
-
-
-// ==============================
-// Init
-// ==============================
-
-document.addEventListener("DOMContentLoaded",()=>{
-
-loadTeams()
-
-})

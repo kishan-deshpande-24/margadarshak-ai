@@ -1,169 +1,127 @@
 const supabase = require("../services/supabase")
 
-// ==============================
-// Create Team
-// ==============================
+function generateCode(){
+  return Math.random().toString(36).substring(2,8)
+}
 
+// ================= CREATE TEAM =================
 exports.createTeam = async (req,res)=>{
+  try{
+    const { name, userId } = req.body
 
-try{
+    const invite_code = generateCode()
 
-const { name, description, userId } = req.body
+    const { data, error } = await supabase
+      .from("teams")
+      .insert([{
+        name,
+        created_by:userId,
+        avatar:`https://api.dicebear.com/7.x/initials/svg?seed=${name}`,
+        invite_code
+      }])
+      .select()
 
-const { data, error } = await supabase
-.from("teams")
-.insert([{
+    if(error) return res.json({ error })
 
-name,
-description,
-created_by:userId
+    await supabase.from("team_members").insert([{
+      team_id:data[0].id,
+      user_id:userId
+    }])
 
-}])
-.select()
+    res.json({ team:data[0] })
 
-if(error) throw error
-
-res.json(data)
-
-}catch(error){
-
-console.error(error)
-
-res.status(500).json({
-
-message:"Error creating team"
-
-})
-
+  }catch(e){
+    console.error(e)
+    res.json({ error:"create failed" })
+  }
 }
 
-}
-
-
-
-// ==============================
-// Get Teams
-// ==============================
-
-exports.getTeams = async (req,res)=>{
-
-try{
-
-const { data, error } = await supabase
-.from("teams")
-.select("*")
-.order("created_at",{ascending:false})
-
-if(error) throw error
-
-res.json(data)
-
-}catch(error){
-
-res.status(500).json([])
-
-}
-
-}
-
-
-
-// ==============================
-// Join Team
-// ==============================
-
+// ================= JOIN TEAM =================
 exports.joinTeam = async (req,res)=>{
+  try{
+    const { code, userId } = req.body
 
-try{
+    const { data } = await supabase
+      .from("teams")
+      .select("*")
+      .eq("invite_code", code)
+      .single()
 
-const { teamId, userId } = req.body
+    if(!data) return res.json({ error:"Invalid code" })
 
-await supabase
-.from("team_members")
-.insert([{
+    await supabase.from("team_members").insert([{
+      team_id:data.id,
+      user_id:userId
+    }])
 
-team_id:teamId,
-user_id:userId
+    res.json({ success:true })
 
-}])
-
-res.json({
-
-message:"Joined team"
-
-})
-
-}catch(error){
-
-res.status(500).json({
-
-message:"Error joining"
-
-})
-
+  }catch(e){
+    res.json({ error:"join failed" })
+  }
 }
 
+// ================= GET TEAMS =================
+exports.getTeams = async (req,res)=>{
+  const { data } = await supabase.from("teams").select("*")
+  res.json({ teams:data || [] })
 }
 
+// ================= MEMBERS =================
+exports.getTeamMembers = async (req,res)=>{
+  const { teamId } = req.params
 
+  const { data } = await supabase
+    .from("team_members")
+    .select("*")
+    .eq("team_id", teamId)
 
-// ==============================
-// Leave Team
-// ==============================
-
-exports.leaveTeam = async (req,res)=>{
-
-try{
-
-const { teamId, userId } = req.body
-
-await supabase
-.from("team_members")
-.delete()
-.eq("team_id",teamId)
-.eq("user_id",userId)
-
-res.json({
-
-message:"Left team"
-
-})
-
-}catch(error){
-
-res.status(500).json({
-
-message:"Error leaving"
-
-})
-
+  res.json({ members:data || [] })
 }
 
+// ================= SEND MESSAGE =================
+exports.sendMessage = async (req,res)=>{
+  const { teamId } = req.params
+  const { userId, text } = req.body
+
+  await supabase.from("team_messages").insert([{
+    team_id:teamId,
+    user_id:userId,
+    text
+  }])
+
+  res.json({ success:true })
 }
 
+// ================= GET MESSAGES =================
+exports.getMessages = async (req,res)=>{
+  const { teamId } = req.params
 
+  const { data } = await supabase
+    .from("team_messages")
+    .select("*")
+    .eq("team_id", teamId)
+    .order("created_at",{ ascending:true })
 
-// ==============================
-// Get Team Members
-// ==============================
-
-exports.getMembers = async (req,res)=>{
-
-try{
-
-const { teamId } = req.query
-
-const { data } = await supabase
-.from("team_members")
-.select("*")
-.eq("team_id",teamId)
-
-res.json(data)
-
-}catch(error){
-
-res.json([])
-
+  res.json({ messages:data || [] })
 }
 
+// ================= ANALYTICS =================
+exports.getTeamAnalytics = async (req,res)=>{
+  const { teamId } = req.params
+
+  const members = await supabase
+    .from("team_members")
+    .select("*")
+    .eq("team_id", teamId)
+
+  const messages = await supabase
+    .from("team_messages")
+    .select("*")
+    .eq("team_id", teamId)
+
+  res.json({
+    totalMembers: members.data?.length || 0,
+    totalMessages: messages.data?.length || 0
+  })
 }

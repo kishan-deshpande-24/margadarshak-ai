@@ -1,178 +1,131 @@
+# 🚀 Margadarshak AI
 
-# 🚀 Margadarshak AI — AI Career Guidance Platform
-
-Margadarshak AI is an **AI-powered career guidance platform** that helps students and professionals discover their career path, build skills, practice interviews, and track progress.
-
----
-
-#  Features
-
-##  AI Career Assessment
-- Dynamic AI questions
-- Career recommendation
-- Skill gap analysis
-
-##  AI Career Roadmap
-- Personalized roadmap
-- Learning timeline
-- Project recommendations
-
-##  Resume Analyzer
-- Resume score
-- ATS score
-- Skill detection
-- AI suggestions
-
-## AI Interview Simulator
-- Voice-based interview
-- Real-time feedback
-- AI mock interviews
-
-##  English Mentor
-- Live conversation AI
-- Daily speaking challenge
-- Voice mentor
-- Progress tracking
-
-##  Dashboard
-- Career progress
-- Resume score
-- Interview score
-- Skills tracking
-
-##  Team Finder
-- Create teams
-- Join teams
-- Skill-based matching
-
-##  Community
-- Posts
-- Comments
-- Likes
-- Discussions
-
-##  Company Tracker
-- Track job applications
-- Interview stages
-- Offers
+AI-powered career assistant platform that helps users prepare for interviews, analyze resumes, and improve skills using intelligent feedback.
 
 ---
 
-# Tech Stack
+## ✨ Features
 
-## Frontend
-- HTML
-- CSS
-- JavaScript
-- Chart.js
+### 🎤 AI Interview Simulator
+- Dynamic interview questions (role-based)
+- Voice input support (speech recognition)
+- Real-time question flow
+- AI-based evaluation & scoring
+- Feedback with strengths & improvements
 
-## Backend
+---
+
+### 📄 Resume Analyzer
+- Upload PDF resume
+- Extracts content automatically
+- AI evaluates:
+  - Resume score
+  - ATS score
+  - Skills detected
+  - Suggestions for improvement
+- Stores previous analyses
+- Downloadable report (PDF)
+
+---
+
+### 📊 Dashboard
+- Overview of performance
+- Resume & interview insights
+- Clean SaaS-style UI
+
+---
+
+### 📚 Roadmap & Tracker
+- Track learning progress
+- Career roadmap guidance
+
+---
+
+### 🧠 AI Mentor (English / Communication)
+- Practice communication
+- Improve speaking skills
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- HTML, CSS, JavaScript
+- Web Speech API (Voice Input)
+- PDF.js (Resume parsing)
+
+### Backend
 - Node.js
 - Express.js
 
-## Database
+### Database & Storage
 - Supabase (PostgreSQL)
+- Supabase Storage (for files)
 
-## AI Services
-- Groq API
-- OpenAI API
-- ElevenLabs (Voice AI)
-
----
-
-#  Project Structure
-margadarshak-ai/ │ ├── client/ │   ├── pages/ │   ├── js/ │   ├── css/ │   └── assets/ │ ├── server/ │   ├── controllers/ │   ├── routes/ │   ├── services/ │   └── index.js │ ├── .env ├── package.json └── README.md
+### AI Integration
+- OpenAI API (or custom AI service)
 
 ---
 
-#  Installation
+## ⚙️ Installation
 
-## 1. Clone Repository
+### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/margadarshak-ai.git
+git clone https://github.com/your-username/margadarshak-ai.git
 cd margadarshak-ai
 2. Install Dependencies
 Bash
 npm install
-3. Create .env File
-Create .env in root folder
+3. Setup Environment Variables
+Create .env file:
 Environment
 PORT=3000
 
-# AI
-OPENAI_API_KEY=
-GROQ_API_KEY=
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
 
-# Supabase
-SUPABASE_URL=
-SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-
-# Auth
-JWT_SECRET=
-SESSION_SECRET=
-
-# Voice
-ELEVENLABS_API_KEY=
-4. Run Project
+OPENAI_API_KEY=your_openai_key
+4. Run Server
 Bash
 npm run dev
-🌐 Pages
-Page
-Description
-Dashboard
-User overview
-Assessment
-AI career assessment
-Roadmap
-AI career roadmap
-Resume
-Resume analyzer
+Server runs at:
+Plain text
+http://localhost:3000
+📁 Project Structure
+Plain text
+server/
+ ├── controllers/
+ ├── routes/
+ ├── services/
+ └── index.js
+
+client/
+ ├── pages/
+ ├── js/
+ └── css/
+🎤 Voice Feature Requirements
+Use Google Chrome
+Allow microphone access
+Works on localhost or HTTPS
+🧪 API Endpoints
 Interview
-AI mock interview
-Mentor
-English speaking AI
-Teams
-Team finder
-Community
-Discussion forum
-Tracker
-Job tracker
-Profile
-User profile
-Settings
-User settings
-🤖 AI Capabilities
-Dynamic AI Questions
-Assessment questions change every time
-Interview questions dynamic
-English mentor dynamic
-🎯 Use Cases
-Students choosing career
-Job seekers preparing interviews
-Hackathon teams
-Skill development
-🔒 Authentication
-JWT Authentication
-Secure routes
-Protected dashboard
-📊 Database Tables
-users
-profiles
-assessments
-roadmaps
-resumes
-interviews
-teams
-community
-tracker
-mentor_sessions
-🚀 Future Features
-Video interview AI
-AI resume builder
-Job recommendation AI
-LinkedIn integration
-AI project builder
+GET /api/interview/questions
+POST /api/interview/submit
+GET /api/interview/report
+Resume
+POST /api/resume/analyze
+GET /api/resume
+⚠️ Notes
+Speech recognition may not work in all browsers
+Ensure Supabase tables are created correctly
+Resume must be in PDF format
+🔥 Future Enhancements
+AI video interviewer (avatar + voice)
+Real-time scoring
+Multi-language support
+Advanced analytics dashboard
 👨‍💻 Author
-Kishan
+Kishan Deshpande
+⭐ If you like this project
+Give it a ⭐ on GitHub!

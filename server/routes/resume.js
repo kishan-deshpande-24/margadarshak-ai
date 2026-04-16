@@ -1,14 +1,9 @@
 const express = require("express")
-
 const router = express.Router()
 
-const {
-analyzeResume,
-getUserResumeAnalyses
-} = require("../controllers/resumeController")
+const resumeController = require("../controllers/resumeController")
 
-router.post("/analyze", analyzeResume)
-
-router.get("/", getUserResumeAnalyses)
+router.post("/analyze", resumeController.analyzeResume)
+router.get("/", resumeController.getUserResumeAnalyses)
 
 module.exports = router

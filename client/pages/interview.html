@@ -1,312 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>AI Interview - Margadarshak AI</title>
-
 <link rel="stylesheet" href="../css/style.css">
 <script src="https://unpkg.com/lucide@latest"></script>
-
 </head>
 
 <body>
 
 <div class="app-container">
 
-<!-- Sidebar -->
-
 <div class="sidebar">
-
 <div class="sidebar-header">
 <img src="../assets/Logo.jpeg" class="logo-img">
 <h3>Margadarshak AI</h3>
 </div>
 
 <div class="sidebar-nav">
-
-<a href="dashboard.html" class="nav-item">
-<i data-lucide="layout-dashboard" class="nav-icon"></i>
-Dashboard
-</a>
-<a href="assessment.html" class="nav-item">
-<i data-lucide="clipboard-check" class="nav-icon"></i>
-Assessment
-</a>
-<a href="tracker.html" class="nav-item">
-<i data-lucide="target" class="nav-icon"></i>
-Tracker
-</a>
-<a href="roadmap.html" class="nav-item">
-<i data-lucide="map" class="nav-icon"></i>
-Roadmap
-</a>
-<a href="resume.html" class="nav-item">
-<i data-lucide="file-text" class="nav-icon"></i>
-Resume
-</a>
-<a href="interview.html" class="nav-item active">
-<i data-lucide="message-square" class="nav-icon"></i>
-Interview
-</a>
-<a href="mentor.html" class="nav-item">
-<i data-lucide="mic" class="nav-icon"></i>
-English Mentor
-</a>
-<a href="teams.html" class="nav-item">
-<i data-lucide="users" class="nav-icon"></i>
-Teams
-</a>
-<a href="community.html" class="nav-item">
-<i data-lucide="globe" class="nav-icon"></i>
-Community
-</a>
-<a href="profile.html" class="nav-item">
-<i data-lucide="user" class="nav-icon"></i>
-Profile
-</a>
-<a href="settings.html" class="nav-item">
-<i data-lucide="settings" class="nav-icon"></i>
-Settings
-</a>
-
+<a href="dashboard.html" class="nav-item">Dashboard</a>
+<a href="resume.html" class="nav-item">Resume</a>
+<a href="interview.html" class="nav-item active">Interview</a>
 </div>
-
 </div>
-
-
-<!-- Main -->
 
 <div class="main-content">
 
-<!-- Top Navbar -->
+<h2>FAANG AI Interview</h2>
 
-<div class="top-navbar">
-
-<div class="hamburger-menu" onclick="toggleMobileSidebar()">
-<i data-lucide="menu" class="nav-icon"></i>
-</div>
-
-<h2>AI Interview Simulator</h2>
-
-<div>
-
-<button class="btn btn-danger" onclick="logout()">
+<button onclick="endInterview()" class="btn btn-danger">
 End Interview
 </button>
 
-</div>
-
-</div>
-
-<!-- Mobile Sidebar Overlay -->
-<div class="mobile-sidebar-overlay" onclick="toggleMobileSidebar()"></div>
-
-<!-- Mobile Sidebar -->
-<div class="mobile-sidebar" id="mobileSidebar">
-
-<button class="close-sidebar" onclick="toggleMobileSidebar()">
-<i data-lucide="x" class="nav-icon"></i>
-</button>
-
-<div class="sidebar-header">
-<img src="../assets/Logo.jpeg" class="logo-img">
-<h3>Margadarshak AI</h3>
-</div>
-
-<div class="sidebar-nav">
-
-<a href="dashboard.html" class="nav-item">
-<i data-lucide="layout-dashboard" class="nav-icon"></i>
-Dashboard
-</a>
-<a href="assessment.html" class="nav-item">
-<i data-lucide="clipboard-check" class="nav-icon"></i>
-Assessment
-</a>
-<a href="tracker.html" class="nav-item">
-<i data-lucide="target" class="nav-icon"></i>
-Tracker
-</a>
-<a href="roadmap.html" class="nav-item">
-<i data-lucide="map" class="nav-icon"></i>
-Roadmap
-</a>
-<a href="resume.html" class="nav-item">
-<i data-lucide="file-text" class="nav-icon"></i>
-Resume
-</a>
-<a href="interview.html" class="nav-item active">
-<i data-lucide="message-square" class="nav-icon"></i>
-Interview
-</a>
-<a href="mentor.html" class="nav-item">
-<i data-lucide="mic" class="nav-icon"></i>
-English Mentor
-</a>
-<a href="teams.html" class="nav-item">
-<i data-lucide="users" class="nav-icon"></i>
-Teams
-</a>
-<a href="community.html" class="nav-item">
-<i data-lucide="globe" class="nav-icon"></i>
-Community
-</a>
-<a href="profile.html" class="nav-item">
-<i data-lucide="user" class="nav-icon"></i>
-Profile
-</a>
-<a href="settings.html" class="nav-item">
-<i data-lucide="settings" class="nav-icon"></i>
-Settings
-</a>
-
-</div>
-
-</div>
-
-<!-- Setup Screen -->
-
 <div id="setupScreen" class="glass-card">
 
-<h3>Select Interview Role</h3>
-
 <select id="roleSelect">
-
 <option>Frontend Developer</option>
 <option>Backend Developer</option>
 <option>Full Stack Developer</option>
-<option>Data Scientist</option>
-<option>AI Engineer</option>
-
 </select>
 
-<button 
-class="btn btn-primary"
-style="margin-top:15px"
-onclick="startInterview()"
->
-
+<button onclick="startInterview()" class="btn btn-primary">
 Start Interview
-
 </button>
 
 </div>
-
-
-<!-- Interview Room -->
 
 <div id="interviewRoom" style="display:none">
 
 <div class="dashboard-grid">
 
-<!-- Video Section -->
-
 <div class="glass-card">
-
-<h3>Camera</h3>
-
-<video 
-id="camera"
-autoplay
-muted
-style="width:100%;border-radius:10px"
-></video>
-
-<div style="margin-top:10px">
-
-<span id="timer">05:00</span>
-
+<video id="camera" autoplay muted style="width:100%"></video>
 </div>
 
-</div>
-
-
-<!-- Question Section -->
-
 <div class="glass-card">
-
 <h3>AI Interviewer</h3>
-
-<div id="question">
-
-Waiting for question...
-
-</div>
-
-<button 
-class="btn btn-primary"
-style="margin-top:15px"
-onclick="nextQuestion()"
->
-
-Next Question
-
-</button>
-
+<div id="avatar" class="avatar"></div>
+<div id="question"></div>
 </div>
 
 </div>
 
 </div>
 
+<!-- CODING -->
+<div id="codingRound" style="display:none">
+<div class="glass-card">
+<h3>Coding Round</h3>
+<div id="codingQuestion"></div>
+<textarea id="codeEditor"></textarea>
+<button onclick="runCode()">Run</button>
+<button onclick="submitCode()">Submit</button>
+<pre id="output"></pre>
+</div>
+</div>
 
-<!-- Results -->
+<!-- WHITEBOARD -->
+<div id="whiteboardRound" style="display:none">
+<canvas id="board" width="600" height="400"></canvas>
+<button onclick="clearBoard()">Clear</button>
+<button onclick="continueInterview()">Continue</button>
+</div>
 
 <div id="resultScreen" style="display:none">
-
-<div class="glass-card">
-
-<h2>Interview Complete</h2>
-
-<h3 id="score">Score: 0</h3>
-
+<h2 id="score"></h2>
 <div id="feedback"></div>
-
-<button 
-class="btn btn-primary"
-onclick="downloadReport()"
->
-
-Download Report
-
-</button>
-
 </div>
 
 </div>
-
-
 </div>
 
-</div>
-
-
-<script src="../js/layout.js"></script>
 <script src="../js/interview.js"></script>
-<script src="../js/cheating-detection.js"></script>
-
-<script>
-
-function logout(){
-
-localStorage.removeItem("token")
-window.location.href="login.html"
-
-}
-
-function toggleMobileSidebar(){
-const sidebar = document.getElementById("mobileSidebar");
-const overlay = document.querySelector(".mobile-sidebar-overlay");
-sidebar.classList.toggle("active");
-overlay.classList.toggle("active");
-}
-
-lucide.createIcons();
-
-</script>
+<script>lucide.createIcons()</script>
 
 </body>
 </html>

@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Team Finder - Margadarshak AI</title>
+<title>Teams - Margadarshak AI</title>
 
 <link rel="stylesheet" href="../css/style.css">
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -16,8 +16,7 @@
 
 <div class="app-container">
 
-<!-- Sidebar -->
-
+<!-- ================= SIDEBAR ================= -->
 <div class="sidebar">
 
 <div class="sidebar-header">
@@ -31,223 +30,98 @@
 <i data-lucide="layout-dashboard" class="nav-icon"></i>
 Dashboard
 </a>
+
 <a href="assessment.html" class="nav-item">
 <i data-lucide="clipboard-check" class="nav-icon"></i>
 Assessment
 </a>
+
 <a href="tracker.html" class="nav-item">
 <i data-lucide="target" class="nav-icon"></i>
 Tracker
 </a>
+
 <a href="roadmap.html" class="nav-item">
 <i data-lucide="map" class="nav-icon"></i>
 Roadmap
 </a>
+
 <a href="resume.html" class="nav-item">
 <i data-lucide="file-text" class="nav-icon"></i>
 Resume
 </a>
+
 <a href="interview.html" class="nav-item">
 <i data-lucide="message-square" class="nav-icon"></i>
 Interview
 </a>
+
 <a href="mentor.html" class="nav-item">
 <i data-lucide="mic" class="nav-icon"></i>
 English Mentor
 </a>
+
 <a href="teams.html" class="nav-item active">
 <i data-lucide="users" class="nav-icon"></i>
 Teams
 </a>
+
 <a href="community.html" class="nav-item">
 <i data-lucide="globe" class="nav-icon"></i>
 Community
 </a>
-<a href="profile.html" class="nav-item">
-<i data-lucide="user" class="nav-icon"></i>
-Profile
-</a>
-<a href="settings.html" class="nav-item">
-<i data-lucide="settings" class="nav-icon"></i>
-Settings
-</a>
+
+
 
 </div>
 
 </div>
 
-
-<!-- Main Content -->
-
+<!-- ================= MAIN ================= -->
 <div class="main-content">
 
-<!-- Top Navbar -->
+<h2>Teams</h2>
 
-<div class="top-navbar">
-
-<div class="hamburger-menu" onclick="toggleMobileSidebar()">
-<i data-lucide="menu" class="nav-icon"></i>
+<!-- CREATE -->
+<div class="glass-card">
+<input id="teamName" placeholder="Team name">
+<button onclick="createTeam()" class="btn btn-primary">Create</button>
 </div>
 
-<h2>Team Finder</h2>
-
-<div>
-
-<button 
-class="btn btn-primary"
-onclick="showCreateTeam()">
-
-Create Team
-
-</button>
-
+<!-- JOIN -->
+<div class="glass-card" style="margin-top:15px">
+<input id="inviteCode" placeholder="Enter invite code">
+<button onclick="joinTeam()" class="btn btn-primary">Join</button>
 </div>
 
+<!-- TEAMS LIST -->
+<div id="teamsList" style="margin-top:20px"></div>
+
+<!-- ANALYTICS -->
+<div class="glass-card" style="margin-top:20px">
+<h3>Analytics</h3>
+<div id="analytics"></div>
 </div>
 
-<!-- Mobile Sidebar Overlay -->
-<div class="mobile-sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+<!-- CHAT -->
+<div class="glass-card" style="margin-top:20px">
+<h3>Chat</h3>
+<div id="chatBox" style="height:200px;overflow:auto"></div>
 
-<!-- Mobile Sidebar -->
-<div class="mobile-sidebar" id="mobileSidebar">
-
-<button class="close-sidebar" onclick="toggleMobileSidebar()">
-<i data-lucide="x" class="nav-icon"></i>
-</button>
-
-<div class="sidebar-header">
-<img src="../assets/Logo.jpeg" class="logo-img">
-<h3>Margadarshak AI</h3>
-</div>
-
-<div class="sidebar-nav">
-
-<a href="dashboard.html" class="nav-item">
-<i data-lucide="layout-dashboard" class="nav-icon"></i>
-Dashboard
-</a>
-<a href="assessment.html" class="nav-item">
-<i data-lucide="clipboard-check" class="nav-icon"></i>
-Assessment
-</a>
-<a href="tracker.html" class="nav-item">
-<i data-lucide="target" class="nav-icon"></i>
-Tracker
-</a>
-<a href="roadmap.html" class="nav-item">
-<i data-lucide="map" class="nav-icon"></i>
-Roadmap
-</a>
-<a href="resume.html" class="nav-item">
-<i data-lucide="file-text" class="nav-icon"></i>
-Resume
-</a>
-<a href="interview.html" class="nav-item">
-<i data-lucide="message-square" class="nav-icon"></i>
-Interview
-</a>
-<a href="mentor.html" class="nav-item">
-<i data-lucide="mic" class="nav-icon"></i>
-English Mentor
-</a>
-<a href="teams.html" class="nav-item active">
-<i data-lucide="users" class="nav-icon"></i>
-Teams
-</a>
-<a href="community.html" class="nav-item">
-<i data-lucide="globe" class="nav-icon"></i>
-Community
-</a>
-<a href="profile.html" class="nav-item">
-<i data-lucide="user" class="nav-icon"></i>
-Profile
-</a>
-<a href="settings.html" class="nav-item">
-<i data-lucide="settings" class="nav-icon"></i>
-Settings
-</a>
-
-</div>
-
-</div>
-
-<!-- Create Team -->
-
-<div 
-id="createTeam"
-class="glass-card"
-style="display:none"
->
-
-<h3>Create New Team</h3>
-
-<input 
-type="text"
-id="teamName"
-placeholder="Team Name"
-style="margin-top:10px"
->
-
-<textarea 
-id="teamDesc"
-placeholder="Team Description"
-style="margin-top:10px"
-></textarea>
-
-<input 
-type="text"
-id="teamSkills"
-placeholder="Required Skills (comma separated)"
-style="margin-top:10px"
->
-
-<button 
-class="btn btn-primary"
-style="margin-top:15px"
-onclick="createTeam()"
->
-
-Create
-
-</button>
-
-</div>
-
-
-<!-- Teams List -->
-
-<div 
-id="teamsContainer"
-class="dashboard-grid"
-style="margin-top:20px"
->
-
+<input id="messageInput" placeholder="Type message">
+<button onclick="sendMessage()" class="btn btn-primary">Send</button>
 </div>
 
 </div>
 
 </div>
 
+<!-- ================= SCRIPTS ================= -->
 <script src="../js/layout.js"></script>
-<script src="../js/team.js"></script>
+<script src="../js/teams.js"></script>
 
 <script>
-
-function showCreateTeam(){
-
-document.getElementById("createTeam").style.display="block"
-
-}
-
-function toggleMobileSidebar(){
-const sidebar = document.getElementById("mobileSidebar");
-const overlay = document.querySelector(".mobile-sidebar-overlay");
-sidebar.classList.toggle("active");
-overlay.classList.toggle("active");
-}
-
 lucide.createIcons();
-
 </script>
 
 </body>

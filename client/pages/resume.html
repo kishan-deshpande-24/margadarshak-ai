@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -10,14 +9,17 @@
 <link rel="stylesheet" href="../css/style.css">
 <script src="https://unpkg.com/lucide@latest"></script>
 
+<!-- PDF libs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 </head>
 
 <body>
 
 <div class="app-container">
 
-<!-- Sidebar -->
-
+<!-- ================= SIDEBAR ================= -->
 <div class="sidebar">
 
 <div class="sidebar-header">
@@ -31,253 +33,121 @@
 <i data-lucide="layout-dashboard" class="nav-icon"></i>
 Dashboard
 </a>
+
 <a href="assessment.html" class="nav-item">
 <i data-lucide="clipboard-check" class="nav-icon"></i>
 Assessment
 </a>
+
 <a href="tracker.html" class="nav-item">
 <i data-lucide="target" class="nav-icon"></i>
 Tracker
 </a>
+
 <a href="roadmap.html" class="nav-item">
 <i data-lucide="map" class="nav-icon"></i>
 Roadmap
 </a>
+
 <a href="resume.html" class="nav-item active">
 <i data-lucide="file-text" class="nav-icon"></i>
 Resume
 </a>
+
 <a href="interview.html" class="nav-item">
 <i data-lucide="message-square" class="nav-icon"></i>
 Interview
 </a>
+
 <a href="mentor.html" class="nav-item">
 <i data-lucide="mic" class="nav-icon"></i>
 English Mentor
 </a>
+
 <a href="teams.html" class="nav-item">
 <i data-lucide="users" class="nav-icon"></i>
 Teams
 </a>
+
 <a href="community.html" class="nav-item">
 <i data-lucide="globe" class="nav-icon"></i>
 Community
 </a>
-<a href="profile.html" class="nav-item">
-<i data-lucide="user" class="nav-icon"></i>
-Profile
-</a>
-<a href="settings.html" class="nav-item">
-<i data-lucide="settings" class="nav-icon"></i>
-Settings
-</a>
+
 
 </div>
 
 </div>
 
-
-<!-- Main Content -->
-
+<!-- ================= MAIN CONTENT ================= -->
 <div class="main-content">
 
-<!-- Top Navbar -->
-
-<div class="top-navbar">
-
-<div class="hamburger-menu" onclick="toggleMobileSidebar()">
-<i data-lucide="menu" class="nav-icon"></i>
-</div>
-
-<h2>AI Resume Analyzer</h2>
-
-<div>
-
-<button class="btn btn-secondary" onclick="window.location.href='settings.html'">
-Settings
-</button>
-
-<button class="btn btn-danger" onclick="logout()">
-Logout
-</button>
-
-</div>
-
-</div>
-
-<!-- Mobile Sidebar Overlay -->
-<div class="mobile-sidebar-overlay" onclick="toggleMobileSidebar()"></div>
-
-<!-- Mobile Sidebar -->
-<div class="mobile-sidebar" id="mobileSidebar">
-
-<button class="close-sidebar" onclick="toggleMobileSidebar()">
-<i data-lucide="x" class="nav-icon"></i>
-</button>
-
-<div class="sidebar-header">
-<img src="../assets/Logo.jpeg" class="logo-img">
-<h3>Margadarshak AI</h3>
-</div>
-
-<div class="sidebar-nav">
-
-<a href="dashboard.html" class="nav-item">
-<i data-lucide="layout-dashboard" class="nav-icon"></i>
-Dashboard
-</a>
-<a href="assessment.html" class="nav-item">
-<i data-lucide="clipboard-check" class="nav-icon"></i>
-Assessment
-</a>
-<a href="tracker.html" class="nav-item">
-<i data-lucide="target" class="nav-icon"></i>
-Tracker
-</a>
-<a href="roadmap.html" class="nav-item">
-<i data-lucide="map" class="nav-icon"></i>
-Roadmap
-</a>
-<a href="resume.html" class="nav-item active">
-<i data-lucide="file-text" class="nav-icon"></i>
-Resume
-</a>
-<a href="interview.html" class="nav-item">
-<i data-lucide="message-square" class="nav-icon"></i>
-Interview
-</a>
-<a href="mentor.html" class="nav-item">
-<i data-lucide="mic" class="nav-icon"></i>
-English Mentor
-</a>
-<a href="teams.html" class="nav-item">
-<i data-lucide="users" class="nav-icon"></i>
-Teams
-</a>
-<a href="community.html" class="nav-item">
-<i data-lucide="globe" class="nav-icon"></i>
-Community
-</a>
-<a href="profile.html" class="nav-item">
-<i data-lucide="user" class="nav-icon"></i>
-Profile
-</a>
-<a href="settings.html" class="nav-item">
-<i data-lucide="settings" class="nav-icon"></i>
-Settings
-</a>
-
-</div>
-
-</div>
-
-<!-- Upload Resume -->
-
-<div class="glass-card animate-fade-in">
-
-<h3>Upload Your Resume</h3>
-
-<input 
-type="file"
-id="resumeFile"
-accept=".pdf,.doc,.docx"
-style="margin-top:15px"
->
-
-<button 
-class="btn btn-primary"
-style="margin-top:15px"
-onclick="analyzeResume()"
->
-
-Analyze Resume
-
-</button>
-
-</div>
-
-
-<!-- Resume Score -->
-
-<div 
-class="dashboard-grid"
-style="margin-top:20px"
->
+<h2>Resume Analyzer</h2>
 
 <div class="glass-card">
 
+<input type="file" id="resumeFile">
+
+<button onclick="analyzeResume()" class="btn btn-primary">
+Analyze
+</button>
+
+<button onclick="downloadReport()" class="btn btn-primary">
+Download Report
+</button>
+
+</div>
+
+<!-- ================= SCORES ================= -->
+
+<div class="dashboard-grid" style="margin-top:20px">
+
+<div class="glass-card">
 <h3>Resume Score</h3>
-
 <h2 id="resumeScore">0</h2>
-
 </div>
 
 <div class="glass-card">
-
 <h3>ATS Score</h3>
-
 <h2 id="atsScore">0</h2>
-
 </div>
 
 <div class="glass-card">
-
-<h3>Skills Found</h3>
-
+<h3>Skills</h3>
 <div id="skillsList"></div>
-
 </div>
 
 <div class="glass-card">
-
 <h3>Suggestions</h3>
-
 <div id="suggestions"></div>
-
 </div>
 
 </div>
 
+<!-- ================= FEEDBACK ================= -->
 
-<!-- Detailed Feedback -->
-
-<div 
-class="glass-card"
-style="margin-top:20px"
->
-
-<h3>AI Feedback</h3>
-
+<div class="glass-card" style="margin-top:20px">
+<h3>Feedback</h3>
 <div id="feedback"></div>
-
 </div>
 
+<!-- ================= HISTORY ================= -->
 
+<div id="previousAnalyses" class="glass-card" style="margin-top:20px">
+<h3>Previous Analyses</h3>
+<div id="analysesList">No data</div>
 </div>
 
 </div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
 
 <script src="../js/layout.js"></script>
 <script src="../js/resume.js"></script>
 
 <script>
-
-function logout(){
-
-localStorage.removeItem("token")
-window.location.href="login.html"
-
-}
-
-function toggleMobileSidebar(){
-const sidebar = document.getElementById("mobileSidebar");
-const overlay = document.querySelector(".mobile-sidebar-overlay");
-sidebar.classList.toggle("active");
-overlay.classList.toggle("active");
-}
-
 lucide.createIcons();
-
 </script>
 
 </body>

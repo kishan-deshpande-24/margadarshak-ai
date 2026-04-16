@@ -1,194 +1,122 @@
 const askAI = require("../services/openai")
 const supabase = require("../services/supabase")
 
-// ==============================
-// Generate Questions
-// ==============================
+// ================= START =================
+exports.startInterview = async (req,res)=>{
+  const { role } = req.query
 
-exports.getQuestions = async (req,res)=>{
+  res.json({
+    question: `Introduce yourself and your experience in ${role}.`,
+    stage: "intro"
+  })
+}
 
-try{
+// ================= NEXT =================
+exports.nextQuestion = async (req,res)=>{
+  try{
 
-const role = req.query.role || "Software Developer"
+    const { answer, role, stage } = req.body
 
-const random = Math.floor(Math.random()*10000)
+    let nextStage = "easy"
 
-const prompt = `
+    if(stage === "intro") nextStage = "easy"
+    else if(stage === "easy") nextStage = "medium"
+    else if(stage === "medium") nextStage = "hard"
+    else if(stage === "hard") nextStage = "coding"
+    else if(stage === "coding") nextStage = "whiteboard"
+    else if(stage === "whiteboard") nextStage = "behavioral"
+    else nextStage = "final"
 
-Generate 5 interview questions for:
+    const prompt = `
+You are a FAANG interviewer.
 
-${role}
+Candidate answer:
+"${answer}"
 
-Random seed: ${random}
+Role: ${role}
+Current stage: ${stage}
+Next stage: ${nextStage}
 
-Return JSON:
+STRICT RULES:
+- Return ONLY JSON
+- No explanation
+- No markdown
+- No extra text
 
-[
-"question1",
-"question2",
-"question3",
-"question4",
-"question5"
-]
-
+FORMAT:
+{
+  "feedback": "1-2 line realistic feedback",
+  "nextQuestion": "next interview question",
+  "stage": "${nextStage}"
+}
 `
 
-const response = await askAI(prompt)
+    const response = await askAI(prompt)
 
-let questions
+    let data
 
-try{
+    try{
+      const match = response.match(/\{[\s\S]*\}/)
+      data = JSON.parse(match[0])
+    }catch{
+      data = {
+        feedback:"Good attempt, but add more depth.",
+        nextQuestion:"Can you explain more with an example?",
+        stage: nextStage
+      }
+    }
 
-questions = JSON.parse(response)
+    res.json(data)
 
-}catch{
-
-questions = [
-
-"Tell me about yourself",
-
-"What are your strengths",
-
-"Explain your projects",
-
-"Why should we hire you",
-
-"Future goals"
-
-]
-
+  }catch(e){
+    console.error(e)
+    res.json({
+      feedback:"Try to be more clear.",
+      nextQuestion:"Explain again with details.",
+      stage:"medium"
+    })
+  }
 }
 
-res.json({
-questions
-})
-
-}catch(error){
-
-console.error(error)
-
-res.json({
-
-questions:[
-"Tell me about yourself"
-]
-
-})
-
-}
-
-}
-
-
-
-// ==============================
-// Submit Interview
-// ==============================
-
+// ================= FINAL =================
 exports.submitInterview = async (req,res)=>{
 
-try{
+  const { answers } = req.body
 
-const { answers } = req.body
-
-const prompt = `
-
-Evaluate interview answers:
+  const prompt = `
+Evaluate interview:
 
 ${JSON.stringify(answers)}
 
 Return JSON:
-
 {
-score:number,
-feedback:"",
-strengths:["",""],
-improvements:["",""]
+score: number,
+feedback: "",
+strengths: [],
+improvements: []
 }
-
 `
 
-const response = await askAI(prompt)
+  const response = await askAI(prompt)
 
-let result
+  let result
 
-try{
+  try{
+    const match = response.match(/\{[\s\S]*\}/)
+    result = JSON.parse(match[0])
+  }catch{
+    result = {
+      score:75,
+      feedback:"Good overall performance",
+      strengths:["Basic understanding"],
+      improvements:["Go deeper technically"]
+    }
+  }
 
-result = JSON.parse(response)
+  await supabase.from("interviews").insert([{
+    score:result.score,
+    feedback:result.feedback
+  }])
 
-}catch{
-
-result = {
-
-score:80,
-feedback:"Good performance",
-strengths:["Communication"],
-improvements:["Confidence"]
-
-}
-
-}
-
-
-// Save to database
-
-await supabase
-.from("interviews")
-.insert([{
-
-score:result.score,
-feedback:result.feedback
-
-}])
-
-
-res.json(result)
-
-}catch(error){
-
-console.error(error)
-
-res.json({
-
-score:75,
-feedback:"Good attempt"
-
-})
-
-}
-
-}
-
-
-
-// ==============================
-// Generate Report
-// ==============================
-
-exports.getReport = async (req,res)=>{
-
-try{
-
-const { data } = await supabase
-.from("interviews")
-.select("*")
-.order("created_at",{ascending:false})
-.limit(1)
-
-res.json({
-
-report:data[0]
-
-})
-
-}catch(error){
-
-res.json({
-
-report:"No report"
-
-})
-
-}
-
+  res.json(result)
 }

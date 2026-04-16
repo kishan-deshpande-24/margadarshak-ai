@@ -11,12 +11,12 @@ const path = require("path")
 
 const authRoutes = require("./routes/auth")
 const dashboardRoutes = require("./routes/dashboard")
-const assessmentRoutes = require("./routes/assessment")
+const assessmentRoutes = require("./routes/teams")
 const interviewRoutes = require("./routes/interview")
 const mentorRoutes = require("./routes/mentor")
 const teamsRoutes = require("./routes/teams")
 const communityRoutes = require("./routes/community")
-const profileRoutes = require("./routes/profile")
+
 const roadmapRoutes = require("./routes/roadmap")
 const resumeRoutes = require("./routes/resume")
 const trackerRoutes = require("./routes/tracker")
@@ -28,7 +28,8 @@ const app = express()
 // ==============================
 
 app.use(cors())
-app.use(express.json())
+app.use(express.json({limit: "50mb"}))
+app.use(express.urlencoded({ limit: "50mb", extended: true }))
 app.use(express.urlencoded({ extended: true }))
 
 
@@ -43,7 +44,6 @@ app.use("/api/interview", interviewRoutes)
 app.use("/api/mentor", mentorRoutes)
 app.use("/api/teams", teamsRoutes)
 app.use("/api/community", communityRoutes)
-app.use("/api/profile", profileRoutes)
 app.use("/api/roadmap", roadmapRoutes)
 app.use("/api/resume", resumeRoutes)
 app.use("/api/tracker", trackerRoutes)

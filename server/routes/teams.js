@@ -1,48 +1,16 @@
 const express = require("express")
-
 const router = express.Router()
 
-const {
-createTeam,
-getTeams,
-joinTeam,
-leaveTeam,
-getMembers
-} = require("../controllers/teamController")
+const teamController = require("../controllers/teamController")
 
-// ==============================
-// Create Team
-// ==============================
+router.post("/create", teamController.createTeam)
+router.post("/join-code", teamController.joinTeam)
+router.get("/", teamController.getTeams)
 
-router.post("/", createTeam)
+router.get("/:teamId/members", teamController.getTeamMembers)
+router.post("/:teamId/message", teamController.sendMessage)
+router.get("/:teamId/messages", teamController.getMessages)
 
-
-// ==============================
-// Get Teams
-// ==============================
-
-router.get("/", getTeams)
-
-
-// ==============================
-// Join Team
-// ==============================
-
-router.post("/join", joinTeam)
-
-
-// ==============================
-// Leave Team
-// ==============================
-
-router.post("/leave", leaveTeam)
-
-
-// ==============================
-// Get Team Members
-// ==============================
-
-router.get("/members", getMembers)
-
+router.get("/:teamId/analytics", teamController.getTeamAnalytics)
 
 module.exports = router

@@ -1,32 +1,11 @@
-const express = require("express")
 
+const express = require("express")
 const router = express.Router()
 
-const {
-getQuestions,
-submitInterview,
-getReport
-} = require("../controllers/interviewController")
+const controller = require("../controllers/interviewController")
 
-// ==============================
-// Get Interview Questions
-// ==============================
-
-router.get("/question", getQuestions)
-
-
-// ==============================
-// Submit Interview
-// ==============================
-
-router.post("/submit", submitInterview)
-
-
-// ==============================
-// Get Interview Report
-// ==============================
-
-router.get("/report", getReport)
-
+router.get("/start", controller.startInterview)
+router.post("/next", controller.nextQuestion)
+router.post("/submit", controller.submitInterview)
 
 module.exports = router

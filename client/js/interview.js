@@ -1,313 +1,166 @@
-// ==============================
-// Margadarshak AI Interview
-// ==============================
-
-let questionIndex = 0
-let questions = []
+let role = ""
+let stage = "intro"
 let answers = []
-let timer
-let stream
-let recognition
 
-// Start Interview
+const qEl = document.getElementById("question")
 
 async function startInterview(){
 
-document.getElementById("setup-screen").style.display="none"
-document.getElementById("room-screen").style.display="block"
+  role = document.getElementById("roleSelect").value
 
-await loadQuestions()
+  document.getElementById("setupScreen").style.display="none"
+  document.getElementById("interviewRoom").style.display="block"
 
-startCamera()
+  const stream = await navigator.mediaDevices.getUserMedia({ video:true })
+  document.getElementById("camera").srcObject = stream
 
-startTimer()
+  const res = await fetch(`/api/interview/start?role=${role}`)
+  const data = await res.json()
 
-updateQuestion()
-
-startCheating()
-
+  stage = data.stage
+  ask(data.question)
 }
 
-
-// Load Questions
-
-async function loadQuestions(){
-
-try{
-
-const role = document.getElementById("roleSelect").value
-
-const res = await fetch("/api/interview/question?role="+role)
-
-const data = await res.json()
-
-questions = data.questions.split("\n")
-
-}catch(error){
-
-console.error(error)
-
-questions = [
-"Tell me about yourself",
-"What is JavaScript?",
-"What is API?"
-]
-
+// ================= ASK =================
+function ask(q){
+  qEl.innerText = q
+  speak(q, listen)
 }
 
+// ================= SPEAK =================
+function speak(text, cb){
+  const speech = new SpeechSynthesisUtterance(text)
+  speech.onend = ()=> cb()
+  speechSynthesis.speak(speech)
 }
 
+// ================= LISTEN =================
+function listen(){
 
-// Update Question
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition
 
-function updateQuestion(){
+  if(!SpeechRecognition){
+    alert("Use Chrome browser")
+    return
+  }
 
-const q = questions[questionIndex]
+  const rec = new SpeechRecognition()
 
-document.getElementById("questionDisplay").innerText = q
+  rec.lang = "en-US"
+  rec.start()
 
-speakQuestion(q)
+  rec.onresult = async (e)=>{
 
-startListening()
+    const answer = e.results[0][0].transcript
 
+    console.log("User:", answer)
+
+    if(answer.length < 10){
+      speak("Please elaborate your answer")
+      return
+    }
+
+    answers.push({ stage, answer })
+
+    const res = await fetch("/api/interview/next",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ answer, role, stage })
+    })
+
+    const data = await res.json()
+
+    stage = data.stage
+
+    if(stage === "coding"){
+      openCoding(data.nextQuestion)
+      return
+    }
+
+    if(stage === "whiteboard"){
+      openBoard(data.nextQuestion)
+      return
+    }
+
+    speak(data.feedback, ()=>{
+      ask(data.nextQuestion)
+    })
+  }
+
+  rec.onerror = (e)=>{
+    console.log("Mic error:", e.error)
+  }
 }
 
-
-// Voice AI Speak
-
-function speakQuestion(text){
-
-const speech = new SpeechSynthesisUtterance(text)
-
-speech.lang = "en-US"
-
-speech.rate = 1
-
-speech.pitch = 1
-
-window.speechSynthesis.speak(speech)
-
+// ================= CODING =================
+function openCoding(q){
+  document.getElementById("interviewRoom").style.display="none"
+  document.getElementById("codingRound").style.display="block"
+  document.getElementById("codingQuestion").innerText = q
 }
 
-
-// Speech Recognition
-
-function startListening(){
-
-recognition = new (
-window.SpeechRecognition ||
-window.webkitSpeechRecognition
-)()
-
-recognition.lang = "en-US"
-
-recognition.start()
-
-recognition.onresult = function(event){
-
-const answer = event.results[0][0].transcript
-
-answers.push({
-
-question:questions[questionIndex],
-answer
-
-})
-
+function runCode(){
+  try{
+    const res = eval(document.getElementById("codeEditor").value)
+    document.getElementById("output").innerText = res
+  }catch(e){
+    document.getElementById("output").innerText = e.message
+  }
 }
 
+function submitCode(){
+  answers.push({ stage:"coding", answer:document.getElementById("codeEditor").value })
+  document.getElementById("codingRound").style.display="none"
+  document.getElementById("interviewRoom").style.display="block"
+  ask("Explain your coding solution")
 }
 
+// ================= WHITEBOARD =================
+let ctx = document.getElementById("board").getContext("2d")
+let draw = false
 
-// Next Question
-
-function nextQuestion(){
-
-if(recognition){
-
-recognition.stop()
-
+document.getElementById("board").onmousedown=()=>draw=true
+document.getElementById("board").onmouseup=()=>draw=false
+document.getElementById("board").onmousemove=(e)=>{
+  if(draw) ctx.fillRect(e.offsetX,e.offsetY,3,3)
 }
 
-questionIndex++
-
-if(questionIndex < questions.length){
-
-updateQuestion()
-
-}else{
-
-showResults()
-
+function clearBoard(){
+  ctx.clearRect(0,0,600,400)
 }
 
+function openBoard(q){
+  document.getElementById("interviewRoom").style.display="none"
+  document.getElementById("whiteboardRound").style.display="block"
+  alert(q)
 }
 
-
-// Timer
-
-function startTimer(){
-
-let time = 300
-
-timer = setInterval(()=>{
-
-time--
-
-const min = Math.floor(time/60)
-const sec = time%60
-
-document.getElementById("timerDisplay").innerText =
-`${min}:${sec}`
-
-if(time <= 0){
-
-showResults()
-
+function continueInterview(){
+  document.getElementById("whiteboardRound").style.display="none"
+  document.getElementById("interviewRoom").style.display="block"
+  ask("Explain your system design")
 }
 
-},1000)
-
-}
-
-
-// Camera
-
-async function startCamera(){
-
-try{
-
-stream = await navigator.mediaDevices.getUserMedia({
-
-video:true,
-audio:true
-
-})
-
-document.getElementById("camera").srcObject = stream
-
-}catch(e){
-
-console.log("Camera error",e)
-
-}
-
-}
-
-
-// Cheating Detection
-
-function startCheating(){
-
-if(window.cheatingDetector){
-
-window.cheatingDetector.init()
-window.cheatingDetector.startMonitoring()
-
-}
-
-}
-
-
-// Show Results
-
-async function showResults(){
-
-clearInterval(timer)
-
-document.getElementById("room-screen").style.display="none"
-document.getElementById("results-screen").style.display="block"
-
-const score = await calculateScore()
-
-document.getElementById("scoreDisplay").innerText =
-"Score: "+score+"%"
-
-saveInterview(score)
-
-}
-
-
-// Calculate Score
-
-async function calculateScore(){
-
-try{
-
-const res = await fetch("/api/interview/submit",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-answers
-
-})
-
-})
-
-const data = await res.json()
-
-return data.score
-
-}catch(error){
-
-return Math.floor(Math.random()*20)+70
-
-}
-
-}
-
-
-// Save Interview
-
-async function saveInterview(score){
-
-await fetch("/api/interview/submit",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-score,
-answers
-
-})
-
-})
-
-}
-
-
-// End Interview
-
+// ================= END =================
 function endInterview(){
-
-clearInterval(timer)
-
-if(stream){
-
-stream.getTracks().forEach(track=>track.stop())
-
+  finish()
 }
 
-window.location.reload()
+// ================= FINISH =================
+async function finish(){
 
-}
+  document.getElementById("interviewRoom").style.display="none"
+  document.getElementById("resultScreen").style.display="block"
 
+  const res = await fetch("/api/interview/submit",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ answers })
+  })
 
-// Download Results
+  const data = await res.json()
 
-function downloadResults(){
-
-window.location.href="/api/interview/report"
-
+  document.getElementById("score").innerText = "Score: "+data.score
+  document.getElementById("feedback").innerText = data.feedback
 }

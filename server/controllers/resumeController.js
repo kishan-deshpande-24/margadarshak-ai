@@ -1,102 +1,93 @@
 const askAI = require("../services/openai")
 const supabase = require("../services/supabase")
 
-exports.analyzeResume = async (req,res)=>{
+// safer JSON extraction
+function safeParse(text){
+try{
+const match = text.match(/\{[\s\S]*\}/)
+return match ? JSON.parse(match[0]) : null
+}catch{
+return null
+}
+}
+
+// ================= ANALYZE =================
+exports.analyzeResume = async (req, res) => {
 
 try{
 
-const {text, userId} = req.body
+const { text, userId } = req.body
+
+if(!text){
+return res.status(400).json({ error:"No text" })
+}
 
 const prompt = `
-
 Analyze this resume:
 
 ${text}
 
-Give:
-
-1. Resume score out of 100
-2. ATS score out of 100
-3. Skills found (as array)
-4. Suggestions for improvement (as array)
-5. Detailed AI feedback on the resume
-
-Return JSON format:
-
+Return ONLY JSON:
 {
 "score": number,
 "ats": number,
-"skills": ["skill1", "skill2"],
-"suggestions": ["suggestion1", "suggestion2"],
-"ai_feedback": "detailed feedback text"
+"skills": ["..."],
+"suggestions": ["..."],
+"ai_feedback": "detailed feedback"
 }
-
 `
 
-const result = await askAI(prompt)
+const response = await askAI(prompt)
 
-const data = JSON.parse(result)
+let data = safeParse(response)
 
-// Save to Supabase
-const {error} = await supabase
-.from("resume_analysis")
-.insert([
-{
-user_id: userId,
-resume_score: data.score,
-ats_score: data.ats,
-skills: data.skills,
-suggestions: data.suggestions,
-ai_feedback: data.ai_feedback
+if(!data){
+data = {
+score:70,
+ats:70,
+skills:["Communication"],
+suggestions:["Add more projects"],
+ai_feedback:"Improve resume structure"
 }
-])
-
-if(error){
-console.error("Error saving resume analysis:", error)
 }
+
+// save
+await supabase.from("resumes").insert([{
+user_id:userId,
+resume_score:data.score,
+ats_score:data.ats,
+skills:data.skills,
+suggestions:data.suggestions,
+ai_feedback:data.ai_feedback
+}])
 
 res.json(data)
 
-}catch(error){
-
-console.log(error)
+}catch(e){
 
 res.json({
-score:75,
-ats:70,
-skills:["JavaScript","React"],
-suggestions:["Improve projects"],
-ai_feedback:"Your resume looks good but could be improved with more specific achievements and quantifiable results."
+score:60,
+ats:60,
+skills:[],
+suggestions:["Error analyzing"],
+ai_feedback:"Try again"
 })
 
 }
 
 }
 
+// ================= GET HISTORY =================
 exports.getUserResumeAnalyses = async (req,res)=>{
 
-try{
+const { userId } = req.query
 
-const {userId} = req.query
-
-const {data, error} = await supabase
-.from("resume_analysis")
+const { data } = await supabase
+.from("resumes")
 .select("*")
-.eq("user_id",userId)
+.eq("user_id", userId)
 .order("created_at",{ascending:false})
 
-if(error){
-console.error("Error getting resume analyses:", error)
-res.json({analyses:[]})
-}else{
-res.json({analyses:data})
-}
-
-}catch(error){
-
-console.error("Error getting resume analyses:", error)
-res.json({analyses:[]})
-
-}
+res.json({ analyses:data || [] })
 
 }
