@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Resume Analyzer — Margadarshak AI</title>
+<link rel="stylesheet" href="/css/global.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.upload-zone { border:2px dashed var(--border); border-radius:var(--radius-lg); padding:48px; text-align:center; cursor:pointer; transition:all .3s; }
+.upload-zone:hover,.upload-zone.drag { border-color:var(--green); background:rgba(16,185,129,0.04); }
+.score-hexagon { display:flex; flex-direction:column; align-items:center; gap:6px; }
+.hex-score { width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; position:relative; }
+.hex-score::before { content:''; position:absolute; inset:5px; border-radius:50%; background:var(--bg-secondary); }
+.hex-score span { position:relative; z-index:1; }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+  <div class="main-content">
+    <div class="topbar" id="topbar"></div>
+    <div class="page-content">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
+        <div>
+          <h1 style="font-size:24px;font-weight:800">Resume Analyzer</h1>
+          <p style="margin-top:4px;font-size:14px">Upload your resume for AI-powered ATS analysis and job match scoring</p>
+        </div>
+        <button class="btn btn-secondary" onclick="loadHistory()">📋 History</button>
+      </div>
+
+      <!-- Upload Section -->
+      <div class="card" style="padding:28px;margin-bottom:28px" id="uploadSection">
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('resumeFile').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+          <div style="font-size:48px;margin-bottom:12px">📄</div>
+          <div style="font-size:16px;font-weight:600;margin-bottom:8px">Drop your resume here or click to browse</div>
+          <div style="font-size:13px;color:var(--text-muted)">PDF format only · Max 10MB</div>
+          <input type="file" id="resumeFile" accept=".pdf" style="display:none" onchange="handleFileSelect(this)">
+        </div>
+        <div id="fileSelected" style="display:none;margin-top:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius)">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:20px">📄</span>
+              <div><div style="font-size:14px;font-weight:600" id="fileName">resume.pdf</div><div style="font-size:12px;color:var(--text-muted)" id="fileSize">0 KB</div></div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="clearFile()">✕ Remove</button>
+          </div>
+          <div class="form-group" style="margin-top:16px;margin-bottom:0">
+            <label class="form-label">Target Role (optional)</label>
+            <input class="form-input" id="targetRole" placeholder="e.g. Senior Software Engineer">
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px" id="analyzeBtn" onclick="analyzeResume()">🔍 Analyze Resume with AI</button>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div id="resultsSection" style="display:none">
+        <div class="grid-4" style="margin-bottom:24px" id="scoreCards"></div>
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="card" style="padding:24px">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:20px">Score Breakdown</h3>
+            <canvas id="radarChart" height="220"></canvas>
+          </div>
+          <div class="card" style="padding:24px">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Keywords Analysis</h3>
+            <div id="keywordsSection"></div>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="card" style="padding:24px">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">✅ Strengths</h3>
+            <div id="strengthsList"></div>
+          </div>
+          <div class="card" style="padding:24px">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">⚡ Improvements</h3>
+            <div id="improvementsList"></div>
+          </div>
+        </div>
+        <div class="card" style="padding:24px;margin-bottom:24px">
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">🎯 Job Match Analysis</h3>
+          <div id="jobMatchesList"></div>
+        </div>
+        <div class="card" style="padding:24px;margin-bottom:24px">
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:12px">🤖 AI Analysis</h3>
+          <p style="font-size:14px;color:var(--text-secondary);line-height:1.8" id="aiAnalysisText"></p>
+        </div>
+        <div style="display:flex;gap:12px">
+          <button class="btn btn-primary" id="downloadBtn" onclick="downloadReport()">📥 Download PDF Report</button>
+          <button class="btn btn-secondary" onclick="analyzeAnother()">📄 Analyze Another Resume</button>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div id="historySection" style="display:none">
+        <h3 style="font-size:18px;font-weight:700;margin-bottom:16px">Resume History</h3>
+        <div id="historyList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+initPage('resume', 'Resume Analyzer');
+function escapeHtml(str){if(str==null)return '';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+let currentResumeId = null;
+let selectedFile = null;
+
+function handleFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.name.endsWith('.pdf')) return toast('Please upload a PDF file', 'error');
+  if (file.size > 10 * 1024 * 1024) return toast('File too large. Max 10MB', 'error');
+  selectedFile = file;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+  document.getElementById('fileSelected').style.display = 'block';
+  document.querySelector('.upload-zone').style.display = 'none';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    document.getElementById('resumeFile').files = e.dataTransfer.files;
+    handleFileSelect(document.getElementById('resumeFile'));
+  }
+}
+
+function clearFile() {
+  selectedFile = null;
+  document.getElementById('resumeFile').value = '';
+  document.getElementById('fileSelected').style.display = 'none';
+  document.querySelector('.upload-zone').style.display = 'block';
+}
+
+async function analyzeResume() {
+  if (!selectedFile) return toast('Please select a file first', 'error');
+  const btn = document.getElementById('analyzeBtn');
+  setLoading(btn, true);
+
+  const formData = new FormData();
+  formData.append('resume', selectedFile);
+  const targetRole = document.getElementById('targetRole').value.trim();
+  if (targetRole) formData.append('targetRole', targetRole);
+
+  toast('Analyzing your resume with AI...', 'info', 8000);
+  const data = await postForm('/resume/upload', formData);
+  setLoading(btn, false, '🔍 Analyze Resume with AI');
+
+  if (data.success) {
+    currentResumeId = data.resume._id;
+    renderResults(data.resume);
+    document.getElementById('uploadSection').style.display = 'none';
+    document.getElementById('resultsSection').style.display = 'block';
+    toast('Analysis complete!', 'success');
+  } else {
+    toast(data.message, 'error');
+  }
+}
+
+function renderResults(resume) {
+  const { scores, strengths, improvements, keywords, jobMatches, aiAnalysis } = resume;
+
+  // Score cards
+  const scoreItems = [
+    { label:'Overall Score', value:scores.overall, color:'var(--green)', icon:'⭐' },
+    { label:'ATS Score', value:scores.ats, color:'var(--blue)', icon:'🤖' },
+    { label:'Content Score', value:scores.content, color:'var(--purple)', icon:'📝' },
+    { label:'Keywords Score', value:scores.keywords, color:'var(--yellow)', icon:'🔑' }
+  ];
+  document.getElementById('scoreCards').innerHTML = scoreItems.map(s => `
+    <div class="card stat-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:13px;color:var(--text-muted)">${s.label}</span>
+        <span style="font-size:20px">${s.icon}</span>
+      </div>
+      <div style="font-size:36px;font-weight:800;color:${s.color}">${s.value}%</div>
+      <div class="progress-bar" style="margin-top:12px"><div class="progress-fill" style="width:${s.value}%;background:${s.color}"></div></div>
+    </div>`).join('');
+
+  // Radar chart
+  new Chart(document.getElementById('radarChart'), {
+    type:'radar',
+    data:{ labels:['Overall','ATS','Format','Content','Keywords','Impact'], datasets:[{data:[scores.overall,scores.ats,scores.format,scores.content,scores.keywords,scores.impact],borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',pointBackgroundColor:'#10b981'}] },
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{r:{grid:{color:'rgba(255,255,255,0.08)'},ticks:{display:false},pointLabels:{color:'#94a3b8',font:{size:11}},min:0,max:100}}}
+  });
+
+  // Keywords
+  document.getElementById('keywordsSection').innerHTML = `
+    <div style="margin-bottom:16px"><div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:8px">✓ FOUND (${keywords?.found?.length||0})</div><div style="display:flex;flex-wrap:wrap;gap:6px">${(keywords?.found||[]).slice(0,12).map(k=>`<span class="tag tag-green" style="font-size:11px">${k}</span>`).join('')}</div></div>
+    <div><div style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:8px">✗ MISSING (${keywords?.missing?.length||0})</div><div style="display:flex;flex-wrap:wrap;gap:6px">${(keywords?.missing||[]).slice(0,12).map(k=>`<span class="tag tag-red" style="font-size:11px">${k}</span>`).join('')}</div></div>`;
+
+  document.getElementById('strengthsList').innerHTML = (strengths||[]).map(s=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-secondary);display:flex;gap:8px"><span>✅</span>${s}</div>`).join('') || '<p style="color:var(--text-muted);font-size:13px">No data</p>';
+  document.getElementById('improvementsList').innerHTML = (improvements||[]).map(i=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-secondary);display:flex;gap:8px"><span>⚡</span>${i}</div>`).join('') || '<p style="color:var(--text-muted);font-size:13px">No data</p>';
+
+  document.getElementById('jobMatchesList').innerHTML = (jobMatches||[]).map(j=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg-card);border-radius:var(--radius);margin-bottom:8px">
+      <div><div style="font-size:14px;font-weight:600">${j.role}</div><div style="font-size:12px;color:var(--text-muted)">${j.company}</div></div>
+      <div style="text-align:right"><div style="font-size:20px;font-weight:800;color:${scoreColor(j.matchScore)}">${j.matchScore}%</div><div style="font-size:11px;color:var(--text-muted)">Match</div></div>
+    </div>`).join('') || '<p style="color:var(--text-muted);font-size:13px">No job matches found</p>';
+
+  document.getElementById('aiAnalysisText').textContent = aiAnalysis || 'Analysis complete.';
+}
+
+async function downloadReport() {
+  if (!currentResumeId) return;
+  const btn = document.getElementById('downloadBtn');
+  setLoading(btn, true);
+  const data = await post(`/pdf/resume/${currentResumeId}`, {});
+  setLoading(btn, false, '📥 Download PDF Report');
+  if (data.success && data.url) window.open(data.url, '_blank');
+  else toast('Failed to generate PDF', 'error');
+}
+
+function analyzeAnother() {
+  clearFile();
+  currentResumeId = null;
+  document.getElementById('uploadSection').style.display = 'block';
+  document.getElementById('resultsSection').style.display = 'none';
+}
+
+async function loadHistory() {
+  const histSection = document.getElementById('historySection');
+  if (histSection.style.display === 'block') { histSection.style.display = 'none'; return; }
+  const data = await get('/resume/history');
+  if (data.success) {
+    if (!data.resumes.length) {
+      histSection.innerHTML = `<h3 style="font-size:18px;font-weight:700;margin-bottom:16px">Resume History</h3><p style="color:var(--text-muted)">No resumes analyzed yet.</p>`;
+    } else {
+      histSection.innerHTML = `<h3 style="font-size:18px;font-weight:700;margin-bottom:16px">Resume History</h3>` +
+        data.resumes.map(r => `
+        <div class="card" style="padding:16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-size:14px;font-weight:600">${escapeHtml(r.fileName||'Resume')}</div><div style="font-size:12px;color:var(--text-muted)">${timeAgo(r.createdAt)}</div></div>
+          <div style="display:flex;gap:16px;align-items:center">
+            <div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--green)">${r.scores?.overall||0}%</div><div style="font-size:11px;color:var(--text-muted)">Overall</div></div>
+            <div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--blue)">${r.scores?.ats||0}%</div><div style="font-size:11px;color:var(--text-muted)">ATS</div></div>
+            ${r.reportPdfUrl?`<a href="${escapeHtml(r.reportPdfUrl)}" target="_blank" class="btn btn-secondary btn-sm">PDF</a>`:''}
+          </div>
+        </div>`).join('');
+    }
+    histSection.style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>

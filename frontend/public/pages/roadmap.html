@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Roadmap — Margadarshak AI</title>
+<link rel="stylesheet" href="/css/global.css">
+<style>
+.milestone-item { display:flex; gap:16px; padding:16px; border-radius:var(--radius); transition:background .2s; }
+.milestone-item:hover { background:var(--bg-card-hover); }
+.milestone-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; margin-top:2px; cursor:pointer; }
+.milestone-dot.done { background:var(--gradient); color:#fff; }
+.milestone-dot.pending { background:var(--bg-card); border:2px solid var(--border); color:var(--text-muted); }
+.milestone-connector { width:2px; background:var(--border); margin:0 auto; height:16px; }
+.milestone-connector.done { background:var(--green); }
+.skill-chip { display:inline-block; padding:4px 12px; border-radius:100px; font-size:12px; background:rgba(59,130,246,0.1); color:var(--blue); border:1px solid rgba(59,130,246,0.2); margin:3px; }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+  <div class="main-content">
+    <div class="topbar" id="topbar"></div>
+    <div class="page-content">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
+        <div><h1 style="font-size:24px;font-weight:800">Learning Roadmap</h1><p style="margin-top:4px;font-size:14px">AI-generated personalized learning path</p></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-secondary" onclick="showGenerator()">✨ New Roadmap</button>
+          <button class="btn btn-secondary" id="downloadBtn" style="display:none" onclick="downloadPDF()">📥 PDF</button>
+        </div>
+      </div>
+
+      <!-- Generator Form -->
+      <div id="generatorSection" class="card" style="padding:28px;margin-bottom:28px;display:none">
+        <h3 style="font-size:18px;font-weight:700;margin-bottom:20px">Generate New Roadmap</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Career Goal *</label>
+            <input class="form-input" id="goalInput" placeholder="e.g. Full Stack Developer at Google">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Experience Level</label>
+            <select class="form-select" id="expInput">
+              <option value="fresher">Fresher</option>
+              <option value="junior">Junior (1-3 yrs)</option>
+              <option value="mid">Mid-level (3-5 yrs)</option>
+              <option value="senior">Senior (5+ yrs)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Duration (weeks)</label>
+            <select class="form-select" id="durationInput">
+              <option value="8">8 weeks</option>
+              <option value="12" selected>12 weeks</option>
+              <option value="16">16 weeks</option>
+              <option value="24">24 weeks</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Current Skills (comma-separated)</label>
+            <input class="form-input" id="skillsInput" placeholder="Python, JavaScript, SQL">
+          </div>
+        </div>
+        <button class="btn btn-primary" id="generateBtn" onclick="generateRoadmap()">🗺️ Generate Roadmap</button>
+      </div>
+
+      <!-- Loading -->
+      <div id="loadingSection" style="display:none;text-align:center;padding:60px">
+        <div class="spinner spinner-lg" style="margin:0 auto 16px"></div>
+        <p style="color:var(--text-secondary)">AI is generating your personalized roadmap...</p>
+      </div>
+
+      <!-- Roadmap Display -->
+      <div id="roadmapSection" style="display:none">
+        <div class="card" style="padding:24px;margin-bottom:24px;background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(139,92,246,0.08))">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div><h2 style="font-size:20px;font-weight:800" id="roadmapTitle"></h2><p style="color:var(--text-muted);font-size:13px;margin-top:4px" id="roadmapMeta"></p></div>
+            <div style="font-size:32px;font-weight:800;color:var(--blue)" id="progressPercent">0%</div>
+          </div>
+          <div class="progress-bar" style="height:10px"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+          <div style="display:flex;gap:24px;margin-top:16px" id="roadmapStats"></div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="card" style="padding:24px">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:20px">📅 Weekly Milestones</h3>
+            <div id="milestoneList"></div>
+          </div>
+          <div>
+            <div class="card" style="padding:24px;margin-bottom:16px">
+              <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">🛠️ Projects</h3>
+              <div id="projectsList"></div>
+            </div>
+            <div class="card" style="padding:24px">
+              <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">🎓 Certifications</h3>
+              <div id="certsList"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:24px">
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">📚 Resources</h3>
+          <div id="resourcesList" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px"></div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div id="emptySection" style="text-align:center;padding:80px 20px">
+        <div style="font-size:64px;margin-bottom:16px">🗺️</div>
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:8px">No Roadmap Yet</h2>
+        <p style="color:var(--text-muted);margin-bottom:24px">Generate your personalized AI learning roadmap</p>
+        <button class="btn btn-primary btn-lg" onclick="showGenerator()">✨ Generate Roadmap</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+initPage('roadmap', 'Roadmap');
+let roadmapId = null;
+
+async function loadRoadmap() {
+  const data = await get('/roadmap/active');
+  if (data.success && data.roadmap) {
+    roadmapId = data.roadmap._id;
+    renderRoadmap(data.roadmap);
+    document.getElementById('downloadBtn').style.display = 'block';
+  } else {
+    document.getElementById('emptySection').style.display = 'block';
+  }
+}
+
+function showGenerator() {
+  document.getElementById('emptySection').style.display = 'none';
+  document.getElementById('roadmapSection').style.display = 'none';
+  document.getElementById('generatorSection').style.display = 'block';
+}
+
+async function generateRoadmap() {
+  const goal = document.getElementById('goalInput').value.trim();
+  if (!goal) return toast('Please enter a career goal', 'error');
+  const btn = document.getElementById('generateBtn');
+  setLoading(btn, true);
+  document.getElementById('generatorSection').style.display = 'none';
+  document.getElementById('loadingSection').style.display = 'block';
+  const skillsRaw = document.getElementById('skillsInput').value;
+  const skills = skillsRaw ? skillsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const data = await post('/roadmap/generate', { careerGoal: goal, skills, experience: document.getElementById('expInput').value, duration: parseInt(document.getElementById('durationInput').value) });
+  document.getElementById('loadingSection').style.display = 'none';
+  setLoading(btn, false, '🗺️ Generate Roadmap');
+  if (data.success) {
+    roadmapId = data.roadmap._id;
+    renderRoadmap(data.roadmap);
+    document.getElementById('downloadBtn').style.display = 'block';
+    toast('Roadmap generated!', 'success');
+  } else {
+    toast(data.message, 'error');
+    document.getElementById('generatorSection').style.display = 'block';
+  }
+}
+
+function renderRoadmap(r) {
+  document.getElementById('emptySection').style.display = 'none';
+  document.getElementById('roadmapSection').style.display = 'block';
+  document.getElementById('roadmapTitle').textContent = r.title;
+  document.getElementById('roadmapMeta').textContent = `Goal: ${r.careerGoal} · ${r.duration} weeks · ${capitalize(r.experience)}`;
+  document.getElementById('progressPercent').textContent = r.progress + '%';
+  document.getElementById('progressFill').style.width = r.progress + '%';
+  document.getElementById('roadmapStats').innerHTML = [
+    { label:'Milestones', value:r.milestones?.length||0, color:'var(--blue)' },
+    { label:'Done', value:r.milestones?.filter(m=>m.completed).length||0, color:'var(--green)' },
+    { label:'Projects', value:r.projects?.length||0, color:'var(--purple)' },
+    { label:'Certs', value:r.certifications?.length||0, color:'var(--yellow)' }
+  ].map(s=>`<div><div style="font-size:22px;font-weight:800;color:${s.color}">${s.value}</div><div style="font-size:11px;color:var(--text-muted)">${s.label}</div></div>`).join('');
+
+  document.getElementById('milestoneList').innerHTML = (r.milestones||[]).map((m,i) => `
+    <div>
+      <div class="milestone-item">
+        <div class="milestone-dot ${m.completed?'done':'pending'}" onclick="toggleMilestone(${i},${m.completed})">${m.completed?'✓':m.week}</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600;margin-bottom:6px;${m.completed?'color:var(--text-muted);text-decoration:line-through':''}">${m.title}</div>
+          <div style="display:flex;flex-direction:column;gap:3px">${(m.tasks||[]).map(t=>`<div style="font-size:12px;color:var(--text-muted);display:flex;gap:6px"><span>›</span>${t}</div>`).join('')}</div>
+        </div>
+      </div>
+      ${i < r.milestones.length-1 ? `<div class="milestone-connector ${m.completed?'done':''}"></div>` : ''}
+    </div>`).join('');
+
+  document.getElementById('projectsList').innerHTML = (r.projects||[]).map((p,i) => `
+    <div style="padding:12px;background:var(--bg-card);border-radius:var(--radius);margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:14px;font-weight:600;${p.completed?'text-decoration:line-through;color:var(--text-muted)':''}">${p.title}</div>
+        <input type="checkbox" ${p.completed?'checked':''} onchange="toggleProject(${i},this.checked)" style="accent-color:var(--green);width:16px;height:16px;cursor:pointer">
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">${p.description}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">${(p.skills||[]).map(s=>`<span class="skill-chip">${s}</span>`).join('')}</div>
+    </div>`).join('') || '<p style="color:var(--text-muted);font-size:13px">No projects</p>';
+
+  document.getElementById('certsList').innerHTML = (r.certifications||[]).map(c => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-size:13px;font-weight:600">${c.name}</div><div style="font-size:11px;color:var(--text-muted)">${c.provider}</div></div>
+      <span class="tag ${c.priority==='high'?'tag-red':c.priority==='medium'?'tag-yellow':'tag-green'}" style="font-size:10px">${c.priority}</span>
+    </div>`).join('') || '<p style="color:var(--text-muted);font-size:13px">No certifications</p>';
+
+  document.getElementById('resourcesList').innerHTML = (r.resources||[]).slice(0,8).map(res => `
+    <a href="${res.url||'#'}" target="_blank" style="text-decoration:none">
+      <div class="card" style="padding:14px;transition:transform .2s" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:16px">${res.type==='course'?'🎓':res.type==='book'?'📚':res.type==='video'?'🎬':'📄'}</span>
+          <span style="font-size:12px;color:var(--text-muted);text-transform:capitalize">${res.type}</span>
+          ${res.free?'<span class="tag tag-green" style="font-size:10px;padding:2px 8px">Free</span>':''}
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary)">${res.title}</div>
+      </div>
+    </a>`).join('');
+}
+
+async function toggleMilestone(idx, isDone) {
+  const data = await put('/roadmap/milestone', { roadmapId, milestoneIndex: idx, completed: !isDone });
+  if (data.success) { renderRoadmap(data.roadmap); toast(!isDone ? 'Milestone completed! 🎉' : 'Milestone unmarked', 'success'); }
+}
+
+async function toggleProject(idx, done) {
+  await put('/roadmap/project', { roadmapId, projectIndex: idx, completed: done });
+}
+
+async function downloadPDF() {
+  const btn = document.getElementById('downloadBtn');
+  setLoading(btn, true);
+  const data = await post(`/pdf/roadmap/${roadmapId}`, {});
+  setLoading(btn, false, '📥 PDF');
+  if (data.success && data.url) window.open(data.url, '_blank');
+  else toast('Failed to generate PDF', 'error');
+}
+
+loadRoadmap();
+</script>
+</body>
+</html>

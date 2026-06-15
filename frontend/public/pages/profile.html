@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Profile — Margadarshak AI</title><link rel="stylesheet" href="/css/global.css"></head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+  <div class="main-content">
+    <div class="topbar" id="topbar"></div>
+    <div class="page-content">
+      <div id="profileContent"><div style="text-align:center;padding:60px"><div class="spinner spinner-lg" style="margin:0 auto"></div></div></div>
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script>
+initPage('profile','Profile');
+let editing=false;
+
+function escapeHtml(str){if(str==null)return '';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+
+async function loadProfile(){
+  const data=await get('/users/me');
+  if(!data.success)return;
+  const u=data.user;
+  const badgeData=await get('/badges');
+  const earnedBadges=badgeData.userBadges||[];
+  const avatarSrc=escapeHtml(u.avatar||`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.fullName)}`);
+  document.getElementById('profileContent').innerHTML=`
+  <div style="position:relative;margin-bottom:24px">
+    <div style="height:180px;background:linear-gradient(135deg,#10b981,#3b82f6);border-radius:var(--radius-lg);overflow:hidden">
+      ${u.banner?`<img src="${escapeHtml(u.banner)}" style="width:100%;height:100%;object-fit:cover">`:''}
+    </div>
+    <div style="position:absolute;bottom:-40px;left:32px;display:flex;align-items:flex-end;gap:16px">
+      <img src="${avatarSrc}" style="width:88px;height:88px;border-radius:50%;border:4px solid var(--bg-primary);object-fit:cover" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=U'">
+    </div>
+    <div style="position:absolute;bottom:-40px;right:24px">
+      <button class="btn btn-secondary btn-sm" onclick="toggleEdit()">✏️ Edit Profile</button>
+    </div>
+  </div>
+  <div style="padding:0 32px;padding-top:52px;margin-bottom:24px">
+    <h1 style="font-size:24px;font-weight:800">${escapeHtml(u.fullName)}</h1>
+    <p style="color:var(--text-muted);font-size:14px;margin-top:4px">${escapeHtml(u.email)}${u.phone?` · ${escapeHtml(u.phone)}`:''}</p>
+    <p style="margin-top:8px;font-size:14px;color:var(--text-secondary)">${escapeHtml(u.bio||'No bio yet')}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${(u.skills||[]).map(s=>`<span class="tag tag-green">${escapeHtml(s)}</span>`).join('')}</div>
+  </div>
+
+  <div class="grid-4" style="margin-bottom:24px;padding:0 0">
+    ${[{l:'Profile',v:u.profileCompletion+'%',c:'var(--green)'},{l:'Resume Score',v:(u.resumeScore||0)+'%',c:'var(--blue)'},{l:'Interview',v:(u.interviewScore||0)+'%',c:'var(--purple)'},{l:'Communication',v:(u.communicationScore||0)+'%',c:'var(--yellow)'}].map(s=>`<div class="card stat-card"><div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${s.l}</div><div style="font-size:28px;font-weight:800;color:${s.c}">${s.v}</div></div>`).join('')}
+  </div>
+
+  <div id="editFormSection" style="display:none">
+    <div class="card" style="padding:28px;margin-bottom:24px">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:20px">Edit Profile</h3>
+      <div class="grid-2">
+        <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="editName" value="${escapeHtml(u.fullName||'')}"></div>
+        <div class="form-group"><label class="form-label">Career Goal</label><input class="form-input" id="editGoal" value="${escapeHtml(u.careerGoal||'')}"></div>
+        <div class="form-group" style="grid-column:1/-1"><label class="form-label">Bio</label><textarea class="form-textarea" id="editBio">${escapeHtml(u.bio||'')}</textarea></div>
+        <div class="form-group"><label class="form-label">Skills (comma-separated)</label><input class="form-input" id="editSkills" value="${escapeHtml((u.skills||[]).join(', '))}"></div>
+        <div class="form-group"><label class="form-label">Experience</label><select class="form-select" id="editExp"><option value="fresher" ${u.experience==='fresher'?'selected':''}>Fresher</option><option value="junior" ${u.experience==='junior'?'selected':''}>Junior</option><option value="mid" ${u.experience==='mid'?'selected':''}>Mid-level</option><option value="senior" ${u.experience==='senior'?'selected':''}>Senior</option></select></div>
+        <div class="form-group"><label class="form-label">Profile Picture</label><input type="file" id="editAvatar" accept="image/*" class="form-input" style="padding:8px"></div>
+        <div class="form-group"><label class="form-label">Banner Image</label><input type="file" id="editBanner" accept="image/*" class="form-input" style="padding:8px"></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+        <button class="btn btn-secondary" onclick="toggleEdit()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="padding:24px">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">🏆 Badges (${earnedBadges.length})</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:12px">
+      ${earnedBadges.length ? `<div id="profileBadgesWrap" style="display:flex;flex-wrap:wrap;gap:12px"></div>` : '<p style="color:var(--text-muted);font-size:13px">Complete activities to earn badges!</p>'}
+    </div>
+  </div>`;
+  if(earnedBadges.length) attachBadgeListeners(earnedBadges);
+}
+
+function toggleEdit(){
+  editing=!editing;
+  const s=document.getElementById('editFormSection');
+  if(s) s.style.display=editing?'block':'none';
+}
+
+async function saveProfile(){
+  const btn=document.querySelector('[onclick="saveProfile()"]');setLoading(btn,true);
+  const fd=new FormData();
+  fd.append('fullName',document.getElementById('editName').value);
+  fd.append('bio',document.getElementById('editBio').value);
+  fd.append('careerGoal',document.getElementById('editGoal').value);
+  fd.append('experience',document.getElementById('editExp').value);
+  const skills=document.getElementById('editSkills').value.split(',').map(s=>s.trim()).filter(Boolean);
+  fd.append('skills',JSON.stringify(skills));
+  const av=document.getElementById('editAvatar').files[0];if(av)fd.append('avatar',av);
+  const bn=document.getElementById('editBanner').files[0];if(bn)fd.append('banner',bn);
+  const data=await putForm('/users/profile',fd);
+  setLoading(btn,false,'Save Changes');
+  if(data.success){Auth.setSession(localStorage.getItem('token'),data.user);toast('Profile updated!','success');loadProfile();}
+  else toast(data.message,'error');
+}
+
+function attachBadgeListeners(badges) {
+  const wrap = document.getElementById('profileBadgesWrap');
+  if (!wrap) return;
+  wrap.innerHTML = badges.map((ub,i) => `<div style="text-align:center;width:72px"><div style="width:56px;height:56px;border-radius:14px;background:rgba(255,255,255,0.05);border:2px solid ${escapeHtml(ub.badge?.color||'var(--border)')};display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 6px;cursor:pointer" data-bi="${i}">${escapeHtml(ub.badge?.icon||'🏅')}</div><div style="font-size:10px;color:var(--text-muted);line-height:1.2">${escapeHtml(ub.badge?.name||'Badge')}</div></div>`).join('');
+  wrap.querySelectorAll('[data-bi]').forEach(el => {
+    const ub = badges[+el.dataset.bi];
+    el.addEventListener('click', () => toast(`${escapeHtml(ub.badge?.name||'Badge')}: ${escapeHtml(ub.badge?.description||'')}`, 'info'));
+  });
+}
+
+loadProfile();
+</script></body></html>

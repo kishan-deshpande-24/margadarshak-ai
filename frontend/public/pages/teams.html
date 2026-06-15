@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Team Finder — Margadarshak AI</title><link rel="stylesheet" href="/css/global.css"></head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+  <div class="main-content">
+    <div class="topbar" id="topbar"></div>
+    <div class="page-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
+        <div><h1 style="font-size:24px;font-weight:800">Team Finder</h1><p style="margin-top:4px;font-size:14px">Find teammates with AI-powered compatibility matching</p></div>
+        <button class="btn btn-primary" onclick="document.getElementById('createModal').classList.add('open')">+ Create Team</button>
+      </div>
+      <div class="card" style="padding:20px;margin-bottom:24px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <input class="form-input" id="projectIdea" placeholder="Project idea (e.g. AI study app)..." style="flex:2;min-width:200px">
+          <input class="form-input" id="skillFilter" placeholder="Skills filter (comma-separated)" style="flex:1;min-width:160px">
+          <button class="btn btn-primary" onclick="findMatches()">🔍 Find Matches</button>
+        </div>
+      </div>
+      <div id="matchesSection" style="display:none">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">AI-Matched Teammates</h3>
+        <div id="matchesGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px"></div>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 style="font-size:16px;font-weight:700">Open Teams</h3>
+          <button class="btn btn-secondary btn-sm" onclick="loadMyTeams()">My Teams</button>
+        </div>
+        <div id="teamsList"></div>
+      </div>
+      <div id="myTeamsSection" style="display:none;margin-top:24px">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">My Teams</h3>
+        <div id="myTeamsList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Team Modal -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Create New Team</span><button class="modal-close" onclick="document.getElementById('createModal').classList.remove('open')">✕</button></div>
+    <div class="form-group"><label class="form-label">Team Name *</label><input class="form-input" id="teamName" placeholder="e.g. AI Innovators"></div>
+    <div class="form-group"><label class="form-label">Project Idea</label><textarea class="form-textarea" id="teamProject" placeholder="Describe your project idea..."></textarea></div>
+    <div class="form-group"><label class="form-label">Required Skills (comma-separated)</label><input class="form-input" id="teamSkills" placeholder="Python, React, ML..."></div>
+    <div class="form-group"><label class="form-label">Max Members</label><input class="form-input" type="number" id="teamMax" value="5" min="2" max="10"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="createTeam()">Create Team</button>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+initPage('teams','Team Finder');
+async function findMatches(){
+  const btn=document.querySelector('[onclick="findMatches()"]');setLoading(btn,true);
+  const skills=document.getElementById('skillFilter').value;
+  const data=await get(`/teams/matches?projectIdea=${encodeURIComponent(document.getElementById('projectIdea').value)}&skills=${encodeURIComponent(skills)}`);
+  setLoading(btn,false,'🔍 Find Matches');
+  if(!data.success)return toast(data.message,'error');
+  document.getElementById('matchesSection').style.display='block';
+  document.getElementById('matchesGrid').innerHTML=data.matches.map(u=>`
+    <div class="card" style="padding:20px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <img src="${u.avatar||`https://api.dicebear.com/7.x/initials/svg?seed=${u.fullName}`}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--green)" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=U'">
+        <div><div style="font-size:14px;font-weight:600">${u.fullName}</div><div style="font-size:12px;color:var(--text-muted)">${u.careerGoal||'Developer'}</div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div style="text-align:center;flex:1"><div style="font-size:18px;font-weight:800;color:var(--green)">${u.compatibilityScore}%</div><div style="font-size:10px;color:var(--text-muted)">Compatible</div></div>
+        <div style="text-align:center;flex:1"><div style="font-size:18px;font-weight:800;color:var(--blue)">${u.skillMatch}%</div><div style="font-size:10px;color:var(--text-muted)">Skill Match</div></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${(u.skills||[]).slice(0,4).map(s=>`<span class="tag tag-green" style="font-size:10px">${s}</span>`).join('')}</div>
+      <button class="btn btn-secondary btn-sm" style="width:100%;justify-content:center" onclick="inviteUser('${u._id}','${u.fullName}')">Invite to Team</button>
+    </div>`).join('');
+}
+
+async function inviteUser(userId, name){
+  const myTeams=await get('/teams/my');
+  if(!myTeams.success||!myTeams.teams.length)return toast('Create a team first to invite members','info');
+  const teamId=myTeams.teams[0]._id;
+  const data=await post('/teams/invite',{teamId,userId});
+  toast(data.success?`Invitation sent to ${name}!`:data.message,data.success?'success':'error');
+}
+
+async function createTeam(){
+  const name=document.getElementById('teamName').value.trim();
+  if(!name)return toast('Team name required','error');
+  const skillsRaw=document.getElementById('teamSkills').value;
+  const data=await post('/teams/create',{name,projectIdea:document.getElementById('teamProject').value,requiredSkills:JSON.stringify(skillsRaw.split(',').map(s=>s.trim()).filter(Boolean)),maxMembers:parseInt(document.getElementById('teamMax').value)||5});
+  if(data.success){document.getElementById('createModal').classList.remove('open');toast('Team created!','success');loadTeams();}
+  else toast(data.message,'error');
+}
+
+async function loadTeams(){
+  const data=await get('/teams');
+  if(!data.success)return;
+  document.getElementById('teamsList').innerHTML=data.teams.length?data.teams.map(t=>`
+    <div class="card" style="padding:18px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font-size:15px;font-weight:700">${t.name}</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px">${t.projectIdea||'No description'}</div></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="tag tag-blue">${t.members?.length||0}/${t.maxMembers} members</span>
+          <span class="tag tag-green">${t.status}</span>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px">${(t.requiredSkills||[]).map(s=>`<span class="tag tag-purple" style="font-size:10px">${s}</span>`).join('')}</div>
+    </div>`).join(''):'<p style="color:var(--text-muted)">No open teams found. Create one!</p>';
+}
+
+async function loadMyTeams(){
+  const s=document.getElementById('myTeamsSection');s.style.display=s.style.display==='none'?'block':'none';
+  if(s.style.display!=='block')return;
+  const data=await get('/teams/my');
+  document.getElementById('myTeamsList').innerHTML=data.success&&data.teams.length?data.teams.map(t=>`<div class="card" style="padding:16px;margin-bottom:10px"><div style="font-size:14px;font-weight:600">${t.name}</div><div style="font-size:12px;color:var(--text-muted)">${t.members?.length} members · ${t.status}</div></div>`).join(''):'<p style="color:var(--text-muted)">You haven\'t joined any teams yet.</p>';
+}
+
+loadTeams();
+</script></body></html>

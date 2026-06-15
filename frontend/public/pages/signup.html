@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up — Margadarshak AI</title>
+<link rel="stylesheet" href="/css/global.css">
+<style>
+body { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px; background:radial-gradient(ellipse at 30% 50%, rgba(16,185,129,0.08) 0%, transparent 50%), var(--bg-primary); }
+.auth-box { width:100%; max-width:520px; padding:40px; animation: fadeUp .5s ease; }
+.avatar-upload { display:flex; align-items:center; gap:16px; margin-bottom:24px; }
+.avatar-preview { width:72px; height:72px; border-radius:50%; object-fit:cover; border:2px solid var(--border); background:var(--bg-card); display:flex; align-items:center; justify-content:center; font-size:28px; cursor:pointer; transition:border-color .2s; overflow:hidden; }
+.avatar-preview:hover { border-color:var(--green); }
+.skills-input-wrap { display:flex; flex-wrap:wrap; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:10px; min-height:48px; cursor:text; }
+.skills-input-wrap:focus-within { border-color:var(--green); box-shadow:0 0 0 3px rgba(16,185,129,0.1); }
+.skill-tag { display:inline-flex; align-items:center; gap:4px; background:rgba(16,185,129,0.15); color:var(--green); border:1px solid rgba(16,185,129,0.3); padding:3px 10px; border-radius:100px; font-size:12px; }
+.skill-tag button { background:none; border:none; color:var(--green); cursor:pointer; font-size:14px; line-height:1; padding:0; }
+.skill-input { border:none; outline:none; background:transparent; color:var(--text-primary); font-size:13px; min-width:80px; flex:1; font-family:inherit; }
+.step-indicator { display:flex; gap:8px; margin-bottom:28px; }
+.step-dot { flex:1; height:3px; border-radius:2px; background:var(--border); transition:background .3s; }
+.step-dot.active { background:var(--green); }
+</style>
+</head>
+<body>
+<div class="card auth-box">
+  <div style="text-align:center;margin-bottom:28px">
+    <div style="width:48px;height:48px;background:var(--gradient);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:10px">🧭</div>
+    <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Create Account</h1>
+    <p style="color:var(--text-muted);font-size:14px">Join 50,000+ students on Margadarshak AI</p>
+  </div>
+
+  <div class="step-indicator" id="stepIndicator">
+    <div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div>
+  </div>
+
+  <div id="alertBox"></div>
+
+  <!-- Step 1: Basic Info -->
+  <div id="step1">
+    <div class="avatar-upload">
+      <div class="avatar-preview" id="avatarPreview" onclick="document.getElementById('avatarInput').click()">
+        <span id="avatarEmoji">👤</span>
+        <img id="avatarImg" style="display:none;width:100%;height:100%;object-fit:cover" alt="avatar">
+      </div>
+      <div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px">Profile Photo</div>
+        <div style="font-size:12px;color:var(--text-muted)">Click to upload (optional)</div>
+      </div>
+      <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Full Name *</label>
+        <input class="form-input" id="fullName" placeholder="Kishan Deshpande" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input class="form-input" id="email" type="email" placeholder="you@email.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-input" id="phone" type="tel" placeholder="+91 9876543210">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password *</label>
+        <input class="form-input" id="password" type="password" placeholder="Min 8 characters" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password *</label>
+        <input class="form-input" id="confirmPassword" type="password" placeholder="Re-enter password" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Your Skills (press Enter to add)</label>
+      <div class="skills-input-wrap" id="skillsWrap" onclick="document.getElementById('skillInput').focus()">
+        <input class="skill-input" id="skillInput" placeholder="e.g. Python, React..." onkeydown="addSkill(event)">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bio</label>
+      <textarea class="form-textarea" id="bio" placeholder="Tell us about yourself..." style="min-height:72px"></textarea>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" id="step1Btn" onclick="submitSignup()">Create Account →</button>
+    <p style="text-align:center;font-size:13px;color:var(--text-muted);margin-top:16px">Already have an account? <a href="/pages/login.html">Sign in</a></p>
+  </div>
+
+  <!-- Step 2: Email OTP -->
+  <div id="step2" style="display:none;text-align:center">
+    <div style="font-size:48px;margin-bottom:16px">📧</div>
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Verify Your Email</h2>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:28px">We sent a 6-digit OTP to <span id="emailDisplay" style="color:var(--green);font-weight:600"></span></p>
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:24px" id="otpInputs">
+      <input class="form-input" style="width:52px;text-align:center;font-size:20px;font-weight:700;padding:12px 8px" maxlength="1" oninput="otpMove(this,0)">
+      <input class="form-input" style="width:52px;text-align:center;font-size:20px;font-weight:700;padding:12px 8px" maxlength="1" oninput="otpMove(this,1)">
+      <input class="form-input" style="width:52px;text-align:center;font-size:20px;font-weight:700;padding:12px 8px" maxlength="1" oninput="otpMove(this,2)">
+      <input class="form-input" style="width:52px;text-align:center;font-size:20px;font-weight:700;padding:12px 8px" maxlength="1" oninput="otpMove(this,3)">
+      <input class="form-input" style="width:52px;text-align:center;font-size:20px;font-weight:700;padding:12px 8px" maxlength="1" oninput="otpMove(this,4)">
+      <input class="form-input" style="width:52px;text-align:center;font-size:20px;font-weight:700;padding:12px 8px" maxlength="1" oninput="otpMove(this,5)">
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" id="verifyBtn" onclick="verifyOTP()">Verify Email</button>
+    <p style="margin-top:16px;font-size:13px;color:var(--text-muted)">Didn't receive it? <button onclick="resendOTP('email')" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:13px">Resend OTP</button></p>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+Auth.requireGuest();
+let userId = null;
+const skills = [];
+
+function previewAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('avatarImg').src = e.target.result;
+    document.getElementById('avatarImg').style.display = 'block';
+    document.getElementById('avatarEmoji').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function addSkill(e) {
+  if (e.key !== 'Enter' && e.key !== ',') return;
+  e.preventDefault();
+  const val = e.target.value.trim().replace(/,/g,'');
+  if (!val || skills.includes(val)) { e.target.value=''; return; }
+  skills.push(val);
+  const wrap = document.getElementById('skillsWrap');
+  const tag = document.createElement('span');
+  tag.className = 'skill-tag';
+  const idx = skills.length - 1;
+  tag.dataset.skillIdx = idx;
+  tag.innerHTML = `${escapeHtml(val)}<button type="button" aria-label="Remove skill">×</button>`;
+  tag.querySelector('button').addEventListener('click', () => removeSkill(tag));
+  wrap.insertBefore(tag, e.target);
+  e.target.value = '';
+}
+
+function removeSkill(tagEl) {
+  const val = skills.find((s, i) => String(i) === tagEl.dataset.skillIdx) || '';
+  const idx = parseInt(tagEl.dataset.skillIdx, 10);
+  if (idx > -1 && idx < skills.length) skills.splice(idx, 1);
+  tagEl.remove();
+  // reindex remaining tags
+  document.querySelectorAll('#skillsWrap .skill-tag').forEach((el, i) => { el.dataset.skillIdx = i; });
+}
+
+function escapeHtml(str){if(str==null)return '';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+
+async function submitSignup() {
+  const btn = document.getElementById('step1Btn');
+  const alertBox = document.getElementById('alertBox');
+  alertBox.innerHTML = '';
+
+  const fullName = document.getElementById('fullName').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+
+  if (!fullName || !email || !password) return alertBox.innerHTML = `<div class="alert alert-error">Please fill all required fields</div>`;
+  if (password.length < 8) return alertBox.innerHTML = `<div class="alert alert-error">Password must be at least 8 characters</div>`;
+  if (password !== confirmPassword) return alertBox.innerHTML = `<div class="alert alert-error">Passwords do not match</div>`;
+
+  setLoading(btn, true);
+  const formData = new FormData();
+  formData.append('fullName', fullName);
+  formData.append('email', email);
+  formData.append('password', password);
+  formData.append('bio', document.getElementById('bio').value);
+  formData.append('skills', JSON.stringify(skills));
+  const phone = document.getElementById('phone').value.trim();
+  if (phone) formData.append('phone', phone);
+  const avatarFile = document.getElementById('avatarInput').files[0];
+  if (avatarFile) formData.append('avatar', avatarFile);
+
+  const data = await postForm('/auth/signup', formData);
+  setLoading(btn, false, 'Create Account →');
+
+  if (data.success) {
+    userId = data.userId;
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+    document.getElementById('emailDisplay').textContent = email;
+    document.querySelectorAll('.step-dot')[1].classList.add('active');
+    document.getElementById('otpInputs').querySelectorAll('input')[0].focus();
+  } else {
+    alertBox.innerHTML = `<div class="alert alert-error">${data.message}</div>`;
+  }
+}
+
+function otpMove(input, idx) {
+  if (input.value.length === 1) {
+    const inputs = document.getElementById('otpInputs').querySelectorAll('input');
+    if (idx < 5) inputs[idx + 1].focus();
+  }
+}
+
+async function verifyOTP() {
+  const inputs = document.getElementById('otpInputs').querySelectorAll('input');
+  const otp = [...inputs].map(i => i.value).join('');
+  if (otp.length < 6) return toast('Please enter complete OTP', 'error');
+
+  const btn = document.getElementById('verifyBtn');
+  setLoading(btn, true);
+  const data = await post('/auth/verify-email', { userId, otp });
+  setLoading(btn, false, 'Verify Email');
+
+  if (data.success) {
+    Auth.setSession(data.token, data.user);
+    toast('Email verified! Welcome 🎉', 'success');
+    setTimeout(() => window.location.href = '/pages/onboarding.html', 800);
+  } else {
+    toast(data.message, 'error');
+  }
+}
+
+async function resendOTP(type) {
+  const data = await post('/auth/resend-otp', { userId, type });
+  toast(data.success ? 'OTP resent!' : data.message, data.success ? 'success' : 'error');
+}
+</script>
+</body>
+</html>

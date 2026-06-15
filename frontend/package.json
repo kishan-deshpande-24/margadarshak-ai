@@ -1,0 +1,9 @@
+{
+  "name": "margadarshak-ai-frontend",
+  "version": "1.0.0",
+  "description": "Margadarshak AI Frontend",
+  "scripts": {
+    "dev": "npx serve public -p 3000 --cors",
+    "start": "npx serve public -p 3000 --cors"
+  }
+}

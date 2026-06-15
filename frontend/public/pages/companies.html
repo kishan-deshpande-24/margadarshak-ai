@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Company Tracker — Margadarshak AI</title><link rel="stylesheet" href="/css/global.css"><script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+  <div class="main-content">
+    <div class="topbar" id="topbar"></div>
+    <div class="page-content">
+      <h1 style="font-size:24px;font-weight:800;margin-bottom:8px">Company Tracker</h1>
+      <p style="font-size:14px;margin-bottom:28px">Track your readiness for target companies</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px" id="companyTabs"></div>
+      <div id="companyContent"><div style="text-align:center;padding:60px"><div class="spinner spinner-lg" style="margin:0 auto"></div><p style="color:var(--text-muted);margin-top:16px">Select a company to view your readiness</p></div></div>
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script>
+initPage('companies','Company Tracker');
+const COMPANIES=['google','microsoft','amazon','meta','apple','netflix','zoho','startups'];
+const LOGOS={google:'🔵',microsoft:'🪟',amazon:'🟠',meta:'🔷',apple:'🍎',netflix:'🔴',zoho:'🟢',startups:'🚀'};
+document.getElementById('companyTabs').innerHTML=COMPANIES.map(c=>`<button class="btn btn-secondary" onclick="loadCompany('${c}',this)" style="text-transform:capitalize">${LOGOS[c]||'🏢'} ${c}</button>`).join('');
+async function loadCompany(name,btn){
+  document.querySelectorAll('#companyTabs button').forEach(b=>b.classList.remove('btn-primary'));
+  if(btn){btn.classList.remove('btn-secondary');btn.classList.add('btn-primary');}
+  const data=await get(`/companies/${name}`);
+  if(!data.success)return toast(data.message,'error');
+  const {company,readiness}=data;
+  const canvasId='radarChart_'+name;
+  document.getElementById('companyContent').innerHTML=`
+  <div class="card" style="padding:24px;background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(59,130,246,0.06));margin-bottom:24px">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+      <div style="font-size:48px">${LOGOS[name]||'🏢'}</div>
+      <div><h2 style="font-size:22px;font-weight:800;text-transform:capitalize">${name}</h2><p style="color:var(--text-muted);font-size:13px">${company.culture}</p></div>
+      <div style="margin-left:auto;text-align:right"><div style="font-size:36px;font-weight:900;color:${scoreColor(readiness.overall)}">${readiness.overall}%</div><div style="font-size:12px;color:var(--text-muted)">Overall Readiness</div></div>
+    </div>
+  </div>
+  <div class="grid-2" style="margin-bottom:24px">
+    <div class="card" style="padding:24px">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Readiness Radar</h3>
+      <canvas id="${canvasId}" height="220"></canvas>
+    </div>
+    <div class="card" style="padding:24px">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Detailed Scores</h3>
+      ${Object.entries({Skill:readiness.skill,Resume:readiness.resume,Interview:readiness.interview,Communication:readiness.communication}).map(([k,v])=>`
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span>${k}</span><span style="color:${scoreColor(v)};font-weight:700">${v}%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${v}%;background:${scoreColor(v)}"></div></div>
+      </div>`).join('')}
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card" style="padding:20px"><h3 style="font-size:15px;font-weight:700;margin-bottom:12px">✅ Matched Skills</h3><div style="display:flex;flex-wrap:wrap;gap:6px">${(company.matchedSkills||[]).map(s=>`<span class="tag tag-green">${s}</span>`).join('')||'<p style="color:var(--text-muted);font-size:13px">None matched yet</p>'}</div></div>
+    <div class="card" style="padding:20px"><h3 style="font-size:15px;font-weight:700;margin-bottom:12px">❌ Missing Skills</h3><div style="display:flex;flex-wrap:wrap;gap:6px">${(company.missingSkills||[]).map(s=>`<span class="tag tag-red">${s}</span>`).join('')||'<p style="color:var(--text-muted);font-size:13px">All skills matched!</p>'}</div></div>
+  </div>`;
+  setTimeout(()=>{new Chart(document.getElementById(canvasId),{type:'radar',data:{labels:['Skill','Resume','Interview','Communication'],datasets:[{data:[readiness.skill,readiness.resume,readiness.interview,readiness.communication],borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',pointBackgroundColor:'#10b981'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{r:{grid:{color:'rgba(255,255,255,0.08)'},ticks:{display:false},pointLabels:{color:'#94a3b8',font:{size:12}},min:0,max:100}}}});},100);
+}
+</script></body></html>

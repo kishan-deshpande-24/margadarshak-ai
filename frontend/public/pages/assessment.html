@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Interest Assessment — Margadarshak AI</title>
+<link rel="stylesheet" href="/css/global.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.option-btn { width:100%; padding:14px 18px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-card); color:var(--text-primary); font-size:14px; font-family:inherit; cursor:pointer; text-align:left; transition:all .2s; margin-bottom:10px; }
+.option-btn:hover { border-color:var(--green); background:rgba(16,185,129,0.05); }
+.option-btn.selected { border-color:var(--green); background:rgba(16,185,129,0.1); color:var(--green); font-weight:600; }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+  <div class="main-content">
+    <div class="topbar" id="topbar"></div>
+    <div class="page-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
+        <div><h1 style="font-size:24px;font-weight:800">Interest Assessment</h1><p style="margin-top:4px;font-size:14px">AI-powered adaptive career assessment</p></div>
+        <button class="btn btn-primary" id="startBtn" onclick="startAssessment()">🧭 Start Assessment</button>
+      </div>
+
+      <div id="emptyState" style="text-align:center;padding:60px">
+        <div style="font-size:64px;margin-bottom:16px">🧭</div>
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:8px">Discover Your Career Path</h2>
+        <p style="color:var(--text-muted);max-width:400px;margin:0 auto 24px">Answer AI-generated questions and get personalized career recommendations based on your interests and strengths.</p>
+        <button class="btn btn-primary btn-lg" onclick="startAssessment()">Start Assessment →</button>
+      </div>
+
+      <div id="quizSection" style="display:none">
+        <div class="card" style="padding:28px;max-width:700px;margin:0 auto">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+            <span class="tag tag-blue" id="qNum">Question 1</span>
+            <span style="font-size:13px;color:var(--text-muted)" id="qProgress">0 / 0 answered</span>
+          </div>
+          <div class="progress-bar" style="margin-bottom:24px"><div class="progress-fill" id="quizProgress" style="width:0%"></div></div>
+          <div id="questionText" style="font-size:17px;font-weight:600;margin-bottom:20px;line-height:1.5"></div>
+          <div id="optionsContainer"></div>
+          <div style="display:flex;gap:12px;margin-top:20px">
+            <button class="btn btn-secondary" onclick="loadMoreQuestions()">Skip / More Questions</button>
+            <button class="btn btn-primary" id="nextQBtn" onclick="nextQuestion()" disabled style="flex:1;justify-content:center">Next →</button>
+            <button class="btn btn-primary" id="finishBtn" onclick="finishAssessment()" style="display:none;flex:1;justify-content:center;background:var(--gradient-purple)">Finish & Get Results 🎯</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="resultsSection" style="display:none">
+        <div class="card" style="padding:28px;background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(59,130,246,0.08));margin-bottom:24px">
+          <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">Assessment Complete! 🎉</h2>
+          <p style="color:var(--text-muted);font-size:14px">Based on your answers, here are your career recommendations</p>
+        </div>
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="card" style="padding:24px"><h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Domain Scores</h3><canvas id="scoreChart" height="220"></canvas></div>
+          <div class="card" style="padding:24px"><h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Top Career Matches</h3><div id="careerList"></div></div>
+        </div>
+        <div class="card" style="padding:24px;margin-bottom:24px"><h3 style="font-size:16px;font-weight:700;margin-bottom:12px">🤖 AI Insights</h3><p id="aiInsights" style="font-size:14px;color:var(--text-secondary);line-height:1.8"></p></div>
+        <div style="display:flex;gap:12px">
+          <button class="btn btn-primary" id="pdfBtn" onclick="downloadPDF()">📥 Download PDF Report</button>
+          <button class="btn btn-secondary" onclick="location.reload()">🔄 Retake Assessment</button>
+        </div>
+      </div>
+
+      <div id="historySection" style="margin-top:32px"></div>
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script>
+initPage('assessment','Interest Assessment');
+let assessmentId=null, questions=[], currentQIdx=0, answered=0;
+
+async function startAssessment() {
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('startBtn').style.display='none';
+  setLoading(document.getElementById('startBtn'),true);
+  const data = await post('/assessment/start',{});
+  if(!data.success) return toast(data.message,'error');
+  assessmentId=data.assessmentId;
+  questions=data.questions;
+  document.getElementById('quizSection').style.display='block';
+  renderQuestion(0);
+  loadHistory();
+}
+
+function renderQuestion(idx) {
+  const q = questions[idx];
+  if(!q) return;
+  currentQIdx=idx;
+  document.getElementById('qNum').textContent=`Question ${idx+1}`;
+  document.getElementById('qProgress').textContent=`${answered} / ${questions.length} answered`;
+  document.getElementById('quizProgress').style.width=`${(answered/Math.max(questions.length,1))*100}%`;
+  document.getElementById('questionText').textContent=q.question;
+  document.getElementById('optionsContainer').innerHTML=(q.options||[]).map((opt,i)=>`<button class="option-btn ${q.selectedOption===opt?'selected':''}" onclick="selectOption(this,'${opt.replace(/'/g,"\\'")}',${idx})">${opt}</button>`).join('');
+  document.getElementById('nextQBtn').disabled=!q.selectedOption;
+  document.getElementById('finishBtn').style.display=answered>=5?'block':'none';
+  document.getElementById('nextQBtn').style.display=answered>=5?'none':'block';
+}
+
+async function selectOption(btn, opt, idx) {
+  document.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  if(!questions[idx].selectedOption) answered++;
+  questions[idx].selectedOption=opt;
+  await post('/assessment/answer',{assessmentId,questionIndex:idx,selectedOption:opt});
+  document.getElementById('nextQBtn').disabled=false;
+  document.getElementById('finishBtn').style.display=answered>=5?'block':'none';
+  document.getElementById('nextQBtn').style.display=answered>=5?'none':'block';
+}
+
+async function nextQuestion() {
+  if(currentQIdx<questions.length-1) renderQuestion(currentQIdx+1);
+  else {
+    const prevLen = questions.length;
+    await loadMoreQuestions();
+    if(questions.length > prevLen) renderQuestion(prevLen);
+    else toast('No more questions. Click Finish to get results!', 'info');
+  }
+}
+
+async function loadMoreQuestions() {
+  const data = await get(`/assessment/${assessmentId}/questions`);
+  if(data.success && data.questions?.length){ questions.push(...data.questions); return true; }
+  return false;
+}
+
+async function finishAssessment() {
+  const btn=document.getElementById('finishBtn');
+  setLoading(btn,true);
+  const data = await post(`/assessment/${assessmentId}/complete`,{});
+  setLoading(btn,false,'Finish & Get Results 🎯');
+  if(!data.success) return toast(data.message,'error');
+  document.getElementById('quizSection').style.display='none';
+  renderResults(data.assessment);
+}
+
+function renderResults(a) {
+  document.getElementById('resultsSection').style.display='block';
+  const scores=a.scores||{};
+  new Chart(document.getElementById('scoreChart'),{type:'bar',data:{labels:Object.keys(scores).map(capitalize),datasets:[{data:Object.values(scores),backgroundColor:['#10b981','#3b82f6','#8b5cf6','#ec4899','#f59e0b','#ef4444','#06b6d4','#84cc16'],borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#64748b'},min:0,max:100},x:{grid:{display:false},ticks:{color:'#64748b'}}}}});
+  document.getElementById('careerList').innerHTML=(a.careerRecommendations||[]).slice(0,4).map(c=>`
+    <div style="padding:12px;background:var(--bg-card);border-radius:var(--radius);margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:14px;font-weight:600">${c.career}</div>
+        <span class="tag tag-green" style="font-size:11px">${c.matchScore}%</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted)">${c.description}</div>
+    </div>`).join('');
+  document.getElementById('aiInsights').textContent=a.aiInsights||'';
+  document.getElementById('pdfBtn').dataset.id=a._id;
+}
+
+async function downloadPDF() {
+  const id=document.getElementById('pdfBtn').dataset.id;
+  const data=await post(`/pdf/assessment/${id}`,{});
+  if(data.success&&data.url) window.open(data.url,'_blank');
+  else toast('Failed to generate PDF','error');
+}
+
+async function loadHistory() {
+  const data=await get('/assessment/history');
+  if(!data.success||!data.assessments.length) return;
+  document.getElementById('historySection').innerHTML=`<h3 style="font-size:16px;font-weight:700;margin-bottom:12px">Previous Assessments</h3>`+data.assessments.map(a=>`<div class="card" style="padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:13px;font-weight:600">${timeAgo(a.createdAt)}</div><div style="font-size:11px;color:var(--text-muted)">${a.careerRecommendations?.[0]?.career||'Assessment'}</div></div>${a.pdfUrl?`<a href="${a.pdfUrl}" target="_blank" class="btn btn-secondary btn-sm">PDF</a>`:''}</div>`).join('');
+}
+loadHistory();
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard — Margadarshak AI</title>
+<link rel="stylesheet" href="/css/global.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.welcome-banner { background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(59,130,246,0.08)); border:1px solid rgba(16,185,129,0.2); border-radius:var(--radius-lg); padding:28px 32px; display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; }
+.score-ring-wrap { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.ring { width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; position:relative; }
+.ring::before { content:''; position:absolute; inset:6px; border-radius:50%; background:var(--bg-secondary); }
+.ring span { position:relative; z-index:1; font-size:18px; font-weight:800; }
+.ring-label { font-size:11px; color:var(--text-muted); text-align:center; }
+.todo-item { display:flex; align-items:center; gap:12px; padding:12px; border-radius:var(--radius); transition:background .2s; }
+.todo-item:hover { background:var(--bg-card-hover); }
+.todo-check { width:20px; height:20px; border-radius:50%; border:2px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; flex-shrink:0; }
+.todo-check.done { background:var(--green); border-color:var(--green); }
+.todo-check.done::after { content:'✓'; color:#fff; font-size:12px; font-weight:700; }
+.interview-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
+.interview-row:last-child { border-bottom:none; }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+  <div class="main-content">
+    <div class="topbar" id="topbar"></div>
+    <div class="page-content">
+
+      <!-- Welcome banner -->
+      <div class="welcome-banner" id="welcomeBanner">
+        <div>
+          <div style="font-size:22px;font-weight:800;margin-bottom:4px" id="welcomeMsg">Good morning! 👋</div>
+          <p style="font-size:14px;margin:0" id="welcomeSub">Loading your dashboard...</p>
+        </div>
+        <div style="display:flex;gap:24px" id="quickScores">
+          <div class="skeleton" style="width:72px;height:72px;border-radius:50%"></div>
+          <div class="skeleton" style="width:72px;height:72px;border-radius:50%"></div>
+          <div class="skeleton" style="width:72px;height:72px;border-radius:50%"></div>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="grid-4" style="margin-bottom:28px" id="statCards">
+        <div class="skeleton card" style="height:110px"></div>
+        <div class="skeleton card" style="height:110px"></div>
+        <div class="skeleton card" style="height:110px"></div>
+        <div class="skeleton card" style="height:110px"></div>
+      </div>
+
+      <!-- Charts + Todos row -->
+      <div class="grid-2" style="margin-bottom:28px">
+        <div class="card" style="padding:24px">
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:20px">Interview Score Trend</h3>
+          <canvas id="interviewChart" height="180"></canvas>
+        </div>
+        <div class="card" style="padding:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h3 style="font-size:16px;font-weight:700">Today's Tasks</h3>
+            <button class="btn btn-sm btn-secondary" onclick="generateAITodos()">✨ AI Generate</button>
+          </div>
+          <div id="todoList"><div class="skeleton" style="height:44px;margin-bottom:8px"></div><div class="skeleton" style="height:44px;margin-bottom:8px"></div><div class="skeleton" style="height:44px"></div></div>
+        </div>
+      </div>
+
+      <!-- Roadmap progress + Recent interviews -->
+      <div class="grid-2" style="margin-bottom:28px">
+        <div class="card" style="padding:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h3 style="font-size:16px;font-weight:700">Roadmap Progress</h3>
+            <a href="/pages/roadmap.html" class="btn btn-ghost btn-sm">View →</a>
+          </div>
+          <div id="roadmapWidget"><div class="skeleton" style="height:120px"></div></div>
+        </div>
+        <div class="card" style="padding:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h3 style="font-size:16px;font-weight:700">Recent Interviews</h3>
+            <a href="/pages/interview.html" class="btn btn-ghost btn-sm">New →</a>
+          </div>
+          <div id="recentInterviews"><div class="skeleton" style="height:44px;margin-bottom:8px"></div><div class="skeleton" style="height:44px;margin-bottom:8px"></div><div class="skeleton" style="height:44px"></div></div>
+        </div>
+      </div>
+
+      <!-- Radar + Badges -->
+      <div class="grid-2">
+        <div class="card" style="padding:24px">
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:20px">Career Readiness Radar</h3>
+          <canvas id="radarChart" height="220"></canvas>
+        </div>
+        <div class="card" style="padding:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h3 style="font-size:16px;font-weight:700">Badges Earned</h3>
+            <span id="badgeCount" class="tag tag-green">0 badges</span>
+          </div>
+          <div id="badgesWidget" style="display:flex;flex-wrap:wrap;gap:12px"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+initPage('dashboard', 'Dashboard');
+const user = Auth.getUser();
+
+async function loadDashboard() {
+  const [dashData, todoData, badgeData] = await Promise.all([
+    get('/users/dashboard'),
+    get('/todos'),
+    get('/badges')
+  ]);
+
+  if (!dashData.success) return;
+  const { stats, recentInterviews, todos, roadmap } = dashData;
+
+  // Welcome
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('welcomeMsg').textContent = `${greeting}, ${user?.fullName?.split(' ')[0]}! 👋`;
+  document.getElementById('welcomeSub').textContent = `Profile ${stats.profileCompletion}% complete · ${stats.badgeCount} badges earned · Keep going!`;
+
+  // Quick score rings
+  const rings = [
+    { label:'Resume', score:stats.resumeScore, color:'#10b981' },
+    { label:'Interview', score:stats.interviewScore, color:'#3b82f6' },
+    { label:'Profile', score:stats.profileCompletion, color:'#8b5cf6' }
+  ];
+  document.getElementById('quickScores').innerHTML = rings.map(r => `
+    <div class="score-ring-wrap">
+      <div class="ring" style="background:${scoreRing(r.score, r.color)}">
+        <span style="color:${r.color}">${r.score}</span>
+      </div>
+      <div class="ring-label">${r.label}</div>
+    </div>`).join('');
+
+  // Stat cards
+  document.getElementById('statCards').innerHTML = [
+    { label:'Resume Score', value:stats.resumeScore+'%', icon:'📄', color:'var(--green)', link:'/pages/resume.html' },
+    { label:'ATS Score', value:stats.atsScore+'%', icon:'🎯', color:'var(--blue)', link:'/pages/resume.html' },
+    { label:'Interview Score', value:stats.interviewScore+'%', icon:'🎤', color:'var(--purple)', link:'/pages/interview.html' },
+    { label:'Roadmap Progress', value:stats.roadmapProgress+'%', icon:'🗺️', color:'var(--yellow)', link:'/pages/roadmap.html' }
+  ].map(s => `
+    <div class="card stat-card" onclick="window.location.href='${s.link}'" style="cursor:pointer">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:13px;color:var(--text-muted)">${s.label}</div>
+        <span style="font-size:22px">${s.icon}</span>
+      </div>
+      <div style="font-size:32px;font-weight:800;color:${s.color}">${s.value}</div>
+      <div class="progress-bar" style="margin-top:12px"><div class="progress-fill" style="width:${parseInt(s.value)}%;background:${s.color}"></div></div>
+    </div>`).join('');
+
+  // Interview trend chart
+  const chartData = recentInterviews.length > 0
+    ? { labels: recentInterviews.map(i => i.company), data: recentInterviews.map(i => i.scores?.overall || 0) }
+    : { labels: ['No data'], data: [0] };
+  new Chart(document.getElementById('interviewChart'), {
+    type: 'line',
+    data: {
+      labels: chartData.labels,
+      datasets: [{ label:'Score', data: chartData.data, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,0.1)', tension:.4, fill:true, pointBackgroundColor:'#10b981' }]
+    },
+    options: { responsive:true, plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#64748b'}}, y:{grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#64748b'}, min:0, max:100} } }
+  });
+
+  // Radar chart
+  new Chart(document.getElementById('radarChart'), {
+    type: 'radar',
+    data: {
+      labels: ['Resume','Interview','English','Assessment','Roadmap','Profile'],
+      datasets: [{ data: [stats.resumeScore,stats.interviewScore,stats.communicationScore||0,70,stats.roadmapProgress,stats.profileCompletion], borderColor:'#10b981', backgroundColor:'rgba(16,185,129,0.1)', pointBackgroundColor:'#10b981' }]
+    },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{ r:{grid:{color:'rgba(255,255,255,0.08)'},ticks:{display:false},pointLabels:{color:'#94a3b8',font:{size:11}},min:0,max:100} } }
+  });
+
+  // Todos
+  renderTodos(todoData.todos || []);
+
+  // Roadmap
+  if (roadmap) {
+    document.getElementById('roadmapWidget').innerHTML = `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
+          <span style="color:var(--text-secondary)">${roadmap.title}</span>
+          <span style="color:var(--green);font-weight:600">${roadmap.progress}%</span>
+        </div>
+        <div class="progress-bar" style="height:10px"><div class="progress-fill" style="width:${roadmap.progress}%"></div></div>
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Goal: ${roadmap.careerGoal} · ${roadmap.duration} weeks</div>
+      <div style="display:flex;gap:16px">
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--blue)">${roadmap.milestones?.filter(m=>m.completed).length||0}</div><div style="font-size:11px;color:var(--text-muted)">Milestones Done</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--green)">${roadmap.projects?.filter(p=>p.completed).length||0}</div><div style="font-size:11px;color:var(--text-muted)">Projects Done</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--purple)">${roadmap.milestones?.length||0}</div><div style="font-size:11px;color:var(--text-muted)">Total Milestones</div></div>
+      </div>`;
+  } else {
+    document.getElementById('roadmapWidget').innerHTML = `<div style="text-align:center;padding:20px"><p style="color:var(--text-muted);margin-bottom:16px">No roadmap yet</p><a href="/pages/roadmap.html" class="btn btn-primary btn-sm">Generate Roadmap</a></div>`;
+  }
+
+  // Recent interviews
+  if (recentInterviews.length > 0) {
+    document.getElementById('recentInterviews').innerHTML = recentInterviews.slice(0,4).map(i => `
+      <div class="interview-row">
+        <div><div style="font-size:14px;font-weight:600">${i.company}</div><div style="font-size:12px;color:var(--text-muted)">${capitalize(i.round)} · ${timeAgo(i.completedAt||i.createdAt)}</div></div>
+        <span style="font-size:18px;font-weight:800;color:${scoreColor(i.scores?.overall||0)}">${i.scores?.overall||0}%</span>
+      </div>`).join('');
+  } else {
+    document.getElementById('recentInterviews').innerHTML = `<div style="text-align:center;padding:20px"><p style="color:var(--text-muted);margin-bottom:16px">No interviews yet</p><a href="/pages/interview.html" class="btn btn-primary btn-sm">Start Interview</a></div>`;
+  }
+
+  // Badges
+  if (badgeData.success) {
+    const earned = badgeData.userBadges || [];
+    document.getElementById('badgeCount').textContent = `${earned.length} badges`;
+    if (earned.length > 0) {
+      document.getElementById('badgesWidget').innerHTML = earned.slice(0,8).map(ub => `<div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid ${ub.badge?.color||'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer" data-badge-id="${ub.badge?._id||''}">${ub.badge?.icon||'🏅'}</div>`).join('');
+      document.querySelectorAll('#badgesWidget [data-badge-id]').forEach((el, i) => {
+        const ub = earned[i];
+        el.addEventListener('click', () => toast(`${ub.badge?.name||'Badge'}: ${ub.badge?.description||''}`, 'info'));
+      });
+    } else {
+      document.getElementById('badgesWidget').innerHTML = `<p style="color:var(--text-muted);font-size:13px">Complete activities to earn badges!</p>`;
+    }
+  }
+}
+
+function renderTodos(todos) {
+  if (!todos.length) {
+    document.getElementById('todoList').innerHTML = `<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px">No tasks yet. Click AI Generate!</p>`;
+    return;
+  }
+  document.getElementById('todoList').innerHTML = todos.slice(0,5).map(t => `
+    <div class="todo-item">
+      <div class="todo-check ${t.completed?'done':''}" onclick="toggleTodo('${t._id}',this,${t.completed})"></div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;${t.completed?'text-decoration:line-through;color:var(--text-muted)':''}">${t.title}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${capitalize(t.category)} · ${capitalize(t.priority)} priority</div>
+      </div>
+      <span class="tag tag-${t.priority==='high'?'red':t.priority==='medium'?'yellow':'green'}" style="font-size:10px">${t.priority}</span>
+    </div>`).join('');
+}
+
+async function toggleTodo(id, el, isDone) {
+  const data = await put(`/todos/${id}`, { completed: !isDone });
+  if (data.success) { el.classList.toggle('done'); }
+}
+
+async function generateAITodos() {
+  const btn = document.querySelector('[onclick="generateAITodos()"]');
+  setLoading(btn, true);
+  const data = await post('/todos/generate-ai', {});
+  setLoading(btn, false, '✨ AI Generate');
+  if (data.success) { renderTodos(data.todos); toast('AI tasks generated!', 'success'); }
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

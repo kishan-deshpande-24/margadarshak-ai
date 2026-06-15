@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Community — Margadarshak AI</title><link rel="stylesheet" href="/css/global.css"></head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+  <div class="main-content">
+    <div class="topbar" id="topbar"></div>
+    <div class="page-content">
+      <div class="grid-2" style="gap:24px;align-items:start">
+        <div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px" id="categoryTabs">
+                  </div>
+
+          <!-- Create Post -->
+          <div class="card" style="padding:20px;margin-bottom:20px">
+            <textarea class="form-textarea" id="postContent" placeholder="Share something with the community..." style="min-height:80px;margin-bottom:12px"></textarea>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <select class="form-select" id="postCategory" style="width:auto;padding:8px 12px">
+                <option value="general">General</option>
+                <option value="interview_prep">Interview Prep</option>
+                <option value="projects">Projects</option>
+                <option value="career_guidance">Career Guidance</option>
+                <option value="hackathons">Hackathons</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="createPost()">Post</button>
+            </div>
+          </div>
+
+          <div id="postsList"></div>
+          <button class="btn btn-secondary" id="loadMoreBtn" style="width:100%;justify-content:center;margin-top:12px;display:none" onclick="loadMore()">Load More</button>
+        </div>
+
+        <div>
+          <div class="card" style="padding:20px;margin-bottom:16px">
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:14px">🔥 Trending</h3>
+            <div id="trendingList"></div>
+          </div>
+          <div class="card" style="padding:20px">
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Categories</h3>
+            <div id="categoryLinks"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script>
+initPage('community','Community');
+const user=Auth.getUser();
+let currentPage=1,currentCategory='all';
+
+function escapeHtml(str){if(str==null)return '';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}  
+
+// Render category tabs
+document.getElementById('categoryTabs').innerHTML=
+  ['all','interview_prep','projects','career_guidance','hackathons'].map(c=>`<button class="btn ${c==='all'?'btn-primary':'btn-secondary'} btn-sm" onclick="loadPosts('${c}',this)">${c.replace(/_/g,' ')}</button>`).join('');
+document.getElementById('categoryLinks').innerHTML=
+  ['Interview Prep','Projects','Career Guidance','Hackathons','General'].map(c=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer;color:var(--text-secondary)" onmouseenter="this.style.color='var(--green)'" onmouseleave="this.style.color='var(--text-secondary)'">${c}</div>`).join('');
+
+async function createPost(){
+  const content=document.getElementById('postContent').value.trim();
+  if(!content)return toast('Write something first','error');
+  const data=await post('/community',{content,category:document.getElementById('postCategory').value});
+  if(data.success){document.getElementById('postContent').value='';toast('Posted!','success');loadPosts('all');}
+  else toast(data.message,'error');
+}
+
+async function loadPosts(category='all',btn=null){
+  currentCategory=category;currentPage=1;
+  if(btn){document.querySelectorAll('#categoryTabs button').forEach(b=>{b.classList.remove('btn-primary');b.classList.add('btn-secondary');});btn.classList.remove('btn-secondary');btn.classList.add('btn-primary');}
+  const q=category==='all'?'':category;
+  const data=await get(`/community?category=${q}&page=1&limit=10`);
+  if(!data.success)return;
+  renderPosts(data.posts,false);
+  document.getElementById('loadMoreBtn').style.display=data.pages>1?'block':'none';
+}
+
+async function loadMore(){
+  currentPage++;
+  const q=currentCategory==='all'?'':currentCategory;
+  const data=await get(`/community?category=${q}&page=${currentPage}&limit=10`);
+  if(data.success) renderPosts(data.posts,true);
+  if(currentPage>=data.pages) document.getElementById('loadMoreBtn').style.display='none';
+}
+
+function renderPosts(posts,append=false){
+  const html=posts.map(p=>{
+    const authorName=escapeHtml(p.author?.fullName||'Anonymous');
+    const authorAvatar=escapeHtml(p.author?.avatar||`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(p.author?.fullName||'U')}`);
+    const content=escapeHtml(p.content);
+    const category=escapeHtml(p.category?.replace('_',' '));
+    const postId=escapeHtml(p._id);
+    const comments=(p.comments||[]).map(c=>{
+      const cName=escapeHtml(c.author?.fullName||'User');
+      const cAvatar=escapeHtml(c.author?.avatar||'https://api.dicebear.com/7.x/initials/svg?seed=U');
+      const cContent=escapeHtml(c.content);
+      return `<div style="display:flex;gap:8px;margin-bottom:8px"><img src="${cAvatar}" style="width:28px;height:28px;border-radius:50%;object-fit:cover" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=U'"><div style="background:var(--bg-card);border-radius:var(--radius);padding:8px 12px;flex:1"><div style="font-size:12px;font-weight:600;margin-bottom:2px">${cName}</div><div style="font-size:13px;color:var(--text-secondary)">${cContent}</div></div></div>`;
+    }).join('');
+    return `
+    <div class="card" style="padding:20px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <img src="${authorAvatar}" style="width:36px;height:36px;border-radius:50%;object-fit:cover" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=U'">
+        <div><div style="font-size:13px;font-weight:600">${authorName}</div><div style="font-size:11px;color:var(--text-muted)">${timeAgo(p.createdAt)}</div></div>
+        <span class="tag tag-blue" style="margin-left:auto;font-size:10px">${category}</span>
+      </div>
+      <p style="font-size:14px;color:var(--text-primary);line-height:1.7;margin-bottom:14px">${content}</p>
+      <div style="display:flex;align-items:center;gap:16px">
+        <button onclick="likePost('${postId}',this)" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;display:flex;align-items:center;gap:4px">
+          ❤️ <span id="likes_${postId}">${p.likes?.length||0}</span>
+        </button>
+        <button onclick="toggleComments('${postId}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13px">💬 ${p.comments?.length||0} comments</button>
+        <span style="font-size:12px;color:var(--text-muted)">👁 ${p.views||0}</span>
+      </div>
+      <div id="comments_${postId}" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+        ${comments}
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input class="form-input" id="commentInput_${postId}" placeholder="Write a comment..." style="height:36px;font-size:13px">
+          <button class="btn btn-secondary btn-sm" onclick="addComment('${postId}')">Reply</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  const list=document.getElementById('postsList');
+  if(append) list.innerHTML+=html; else list.innerHTML=html;
+}
+
+async function likePost(id,btn){
+  const data=await post(`/community/${id}/like`,{});
+  if(data.success){document.getElementById(`likes_${id}`).textContent=data.likesCount;}
+}
+
+function toggleComments(id){const el=document.getElementById(`comments_${id}`);el.style.display=el.style.display==='none'?'block':'none';}
+
+async function addComment(postId){
+  const input=document.getElementById(`commentInput_${postId}`);
+  const content=input.value.trim();if(!content)return;
+  const data=await post(`/community/${postId}/comment`,{content});
+  if(data.success){input.value='';toast('Comment added','success');}
+}
+
+async function loadTrending(){
+  const data=await get('/community/trending');
+  if(!data.success)return;
+  document.getElementById('trendingList').innerHTML=data.posts.map(p=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer"><div style="font-size:13px;font-weight:500;margin-bottom:2px">${escapeHtml(p.content.slice(0,60))}...</div><div style="font-size:11px;color:var(--text-muted)">❤️ ${p.likes?.length||0} · 👁 ${p.views||0}</div></div>`).join('');
+}
+
+loadPosts('all');loadTrending();
+</script></body></html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Authenticating...</title>
+<link rel="stylesheet" href="/css/global.css">
+</head>
+<body style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px">
+<div class="spinner spinner-lg"></div>
+<p style="color:var(--text-secondary)">Signing you in...</p>
+<script src="/js/app.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const token = params.get('token');
+const error = params.get('error');
+if (error || !token) { window.location.href = '/pages/login.html?error=google_failed'; }
+else {
+  (async () => {
+    const data = await fetch('http://localhost:5000/api/users/me', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()).catch(() => ({ success: false }));
+    if (data.success) {
+      Auth.setSession(token, data.user);
+      window.location.href = data.user.onboardingCompleted ? '/pages/dashboard.html' : '/pages/onboarding.html';
+    } else { window.location.href = '/pages/login.html?error=google_failed'; }
+  })();
+}
+</script>
+</body>
+</html>

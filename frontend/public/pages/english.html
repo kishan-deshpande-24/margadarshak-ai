@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>English Mentor — Margadarshak AI</title><link rel="stylesheet" href="/css/global.css">
+<style>
+.mode-card{padding:20px;text-align:center;cursor:pointer;border:1px solid var(--border);border-radius:var(--radius-lg);transition:all .2s;}
+.mode-card:hover,.mode-card.selected{border-color:var(--purple);background:rgba(139,92,246,0.08);}
+.chat-bubble{max-width:80%;padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.6;margin-bottom:12px;}
+.chat-bubble.ai{background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);align-self:flex-start;}
+.chat-bubble.user{background:var(--gradient-purple);color:#fff;align-self:flex-end;}
+.feedback-chip{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;margin:2px;}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+  <div class="main-content">
+    <div class="topbar" id="topbar"></div>
+    <div class="page-content">
+      <h1 style="font-size:24px;font-weight:800;margin-bottom:8px">English Mentor</h1>
+      <p style="font-size:14px;margin-bottom:28px">AI-powered conversation practice with real-time grammar and fluency feedback</p>
+
+      <div id="modeSection">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Choose Practice Mode</h3>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px" id="modeGrid"></div>
+        <button class="btn btn-primary btn-lg" onclick="startSession()">🗣️ Start Session</button>
+      </div>
+
+      <div id="sessionSection" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div style="display:flex;gap:8px"><span class="tag tag-purple" id="modeTag"></span><span class="tag tag-green" id="sessionTimer">00:00</span></div>
+          <button class="btn btn-danger btn-sm" onclick="endSession()">⏹ End Session</button>
+        </div>
+        <div class="grid-2">
+          <div class="card" style="padding:0;display:flex;flex-direction:column;height:520px">
+            <div style="padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+              <div style="width:36px;height:36px;background:var(--gradient-purple);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px">🤖</div>
+              <div><div style="font-size:14px;font-weight:600">AI Conversation Partner</div><div style="font-size:11px;color:var(--green)">● Active</div></div>
+            </div>
+            <div id="chatMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px"></div>
+            <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px">
+              <textarea class="form-input" id="userMessage" placeholder="Type your response..." style="resize:none;height:60px;flex:1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+              <button class="btn btn-primary" onclick="sendMessage()" style="align-self:flex-end">Send</button>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="padding:20px;margin-bottom:16px">
+              <h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Live Scores</h3>
+              <div id="liveScores"></div>
+            </div>
+            <div class="card" style="padding:20px">
+              <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">Latest Feedback</h3>
+              <div id="feedbackPanel"><p style="color:var(--text-muted);font-size:13px">Feedback will appear after each message</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="reportSection" style="display:none;margin-top:24px"></div>
+      <div id="historySection" style="margin-top:32px"></div>
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script>
+initPage('english','English Mentor');
+const MODES=[{id:'interview',label:'Interview Practice',icon:'🎤',desc:'Practice interview answers'},{id:'daily_conversation',label:'Daily Conversation',icon:'💬',desc:'Everyday English skills'},{id:'public_speaking',label:'Public Speaking',icon:'📢',desc:'Presentation & speaking'},{id:'group_discussion',label:'Group Discussion',icon:'👥',desc:'GD preparation'},{id:'presentation',label:'Presentation',icon:'📊',desc:'Formal presentations'}];
+let selectedMode='interview',sessionId=null,timerInt=null,startTime=null;
+document.getElementById('modeGrid').innerHTML=MODES.map(m=>`<div class="mode-card ${m.id===selectedMode?'selected':''}" onclick="selectMode('${m.id}',this)"><div style="font-size:32px;margin-bottom:10px">${m.icon}</div><div style="font-size:14px;font-weight:600;margin-bottom:4px">${m.label}</div><div style="font-size:12px;color:var(--text-muted)">${m.desc}</div></div>`).join('');
+function selectMode(id,el){selectedMode=id;document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');}
+async function startSession(){
+  const btn=document.querySelector('[onclick="startSession()"]');setLoading(btn,true);
+  const data=await post('/english/start',{mode:selectedMode});
+  setLoading(btn,false,'🗣️ Start Session');
+  if(!data.success)return toast(data.message,'error');
+  sessionId=data.session._id;
+  document.getElementById('modeSection').style.display='none';
+  document.getElementById('sessionSection').style.display='block';
+  document.getElementById('modeTag').textContent=MODES.find(m=>m.id===selectedMode)?.label||selectedMode;
+  startTime=new Date();timerInt=setInterval(updateTimer,1000);
+  addMessage('ai',data.aiOpener);
+  renderScores({grammar:0,fluency:0,vocabulary:0,confidence:0,overall:0});
+}
+function updateTimer(){const s=Math.floor((new Date()-startTime)/1000);document.getElementById('sessionTimer').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}
+function addMessage(role,text){const el=document.createElement('div');el.className=`chat-bubble ${role}`;el.textContent=text;document.getElementById('chatMessages').appendChild(el);document.getElementById('chatMessages').scrollTop=9999;}
+async function sendMessage(){
+  const msg=document.getElementById('userMessage').value.trim();if(!msg)return;
+  document.getElementById('userMessage').value='';
+  addMessage('user',msg);
+  addMessage('ai','...');
+  const data=await post('/english/message',{sessionId,message:msg});
+  document.getElementById('chatMessages').lastElementChild.remove();
+  if(data.success){addMessage('ai',data.aiResponse);if(data.scores)renderScores(data.scores);if(data.feedback)renderFeedback(data.feedback);}
+}
+function renderScores(scores){document.getElementById('liveScores').innerHTML=Object.entries(scores).filter(([k])=>k!=='pronunciation').map(([k,v])=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--text-muted);text-transform:capitalize">${k}</span><span style="font-weight:600;color:${scoreColor(v)}">${v}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${v}%;background:${scoreColor(v)}"></div></div></div>`).join('');}
+function renderFeedback(fb){const panel=document.getElementById('feedbackPanel');panel.innerHTML=`<div style="font-size:13px;font-weight:600;color:var(--purple);margin-bottom:8px">Score: ${fb.score||0}%</div>${(fb.grammarErrors||[]).length?`<div style="font-size:12px;color:var(--red);margin-bottom:6px">Grammar issues:</div>${fb.grammarErrors.map(e=>`<div class="feedback-chip" style="background:rgba(239,68,68,0.1);color:var(--red)">${e}</div>`).join('')}`:'<div style="font-size:12px;color:var(--green)">✓ No grammar errors</div>'}`;}
+async function endSession(){
+  clearInterval(timerInt);
+  const btn=document.querySelector('[onclick="endSession()"]');setLoading(btn,true);
+  const data=await post(`/english/${sessionId}/end`,{});
+  setLoading(btn,false,'⏹ End Session');
+  if(data.success){document.getElementById('sessionSection').style.display='none';renderReport(data.session);}
+}
+function renderReport(s){const rs=document.getElementById('reportSection');rs.style.display='block';rs.innerHTML=`<div class="card" style="padding:28px;background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(236,72,153,0.08));margin-bottom:20px"><h2 style="font-size:20px;font-weight:800;margin-bottom:4px">Session Complete!</h2><p style="color:var(--text-muted);font-size:13px">Duration: ${s.duration||0} min · Mode: ${s.mode}</p></div><div class="grid-3" style="margin-bottom:20px">${Object.entries(s.scores).filter(([k])=>k!=='pronunciation').map(([k,v])=>`<div class="card stat-card"><div style="font-size:12px;color:var(--text-muted);text-transform:capitalize;margin-bottom:8px">${k}</div><div style="font-size:28px;font-weight:800;color:${scoreColor(v)}">${v}%</div></div>`).join('')}</div><button class="btn btn-primary" onclick="downloadPDF('${s._id}')">📥 Download PDF</button> <button class="btn btn-secondary" onclick="location.reload()">New Session</button>`;}
+async function downloadPDF(id){const data=await post(`/pdf/english/${id}`,{});if(data.success&&data.url)window.open(data.url,'_blank');}
+(async()=>{const data=await get('/english/history');if(data.success&&data.sessions.length){document.getElementById('historySection').innerHTML=`<h3 style="font-size:16px;font-weight:700;margin-bottom:12px">Past Sessions</h3>`+data.sessions.map(s=>`<div class="card" style="padding:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">${s.mode?.replace('_',' ')}</div><div style="font-size:11px;color:var(--text-muted)">${timeAgo(s.createdAt)}</div></div><span style="font-size:18px;font-weight:800;color:${scoreColor(s.scores.overall)}">${s.scores.overall}%</span></div>`).join('');}})();
+</script></body></html>
