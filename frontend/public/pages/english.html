@@ -37,10 +37,11 @@
               <div><div style="font-size:14px;font-weight:600">AI Conversation Partner</div><div style="font-size:11px;color:var(--green)">● Active</div></div>
             </div>
             <div id="chatMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px"></div>
-            <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px">
-              <textarea class="form-input" id="userMessage" placeholder="Type your response..." style="resize:none;height:60px;flex:1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
-              <button class="btn btn-primary" onclick="sendMessage()" style="align-self:flex-end">Send</button>
-            </div>
+                <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center">
+                  <textarea class="form-input" id="userMessage" placeholder="Type your response..." style="resize:none;height:60px;flex:1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+                  <button class="btn btn-ghost" id="voiceBtn" title="Speak answer" onclick="voiceInputEnglish()" style="align-self:flex-end">🎙️</button>
+                  <button class="btn btn-primary" onclick="sendMessage()" style="align-self:flex-end">Send</button>
+                </div>
           </div>
           <div>
             <div class="card" style="padding:20px;margin-bottom:16px">
@@ -78,6 +79,7 @@ async function startSession(){
   document.getElementById('modeTag').textContent=MODES.find(m=>m.id===selectedMode)?.label||selectedMode;
   startTime=new Date();timerInt=setInterval(updateTimer,1000);
   addMessage('ai',data.aiOpener);
+    try{ speak(data.aiOpener); }catch(e){}
   renderScores({grammar:0,fluency:0,vocabulary:0,confidence:0,overall:0});
 }
 function updateTimer(){const s=Math.floor((new Date()-startTime)/1000);document.getElementById('sessionTimer').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}
@@ -90,6 +92,18 @@ async function sendMessage(){
   const data=await post('/english/message',{sessionId,message:msg});
   document.getElementById('chatMessages').lastElementChild.remove();
   if(data.success){addMessage('ai',data.aiResponse);if(data.scores)renderScores(data.scores);if(data.feedback)renderFeedback(data.feedback);}
+  try{ if (data?.success && data.aiResponse) speak(data.aiResponse); } catch(e){}
+}
+
+async function voiceInputEnglish(){
+  const btn = document.getElementById('voiceBtn');
+  setLoading(btn, true);
+  try {
+    const text = await recognizeOnce({ lang: 'en-US', timeout: 15000 });
+    document.getElementById('userMessage').value = text;
+    await sendMessage();
+  } catch (e) { toast('Voice input failed: '+(e.message||e), 'error'); }
+  setLoading(btn, false, '🎙️');
 }
 function renderScores(scores){document.getElementById('liveScores').innerHTML=Object.entries(scores).filter(([k])=>k!=='pronunciation').map(([k,v])=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--text-muted);text-transform:capitalize">${k}</span><span style="font-weight:600;color:${scoreColor(v)}">${v}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${v}%;background:${scoreColor(v)}"></div></div></div>`).join('');}
 function renderFeedback(fb){const panel=document.getElementById('feedbackPanel');panel.innerHTML=`<div style="font-size:13px;font-weight:600;color:var(--purple);margin-bottom:8px">Score: ${fb.score||0}%</div>${(fb.grammarErrors||[]).length?`<div style="font-size:12px;color:var(--red);margin-bottom:6px">Grammar issues:</div>${fb.grammarErrors.map(e=>`<div class="feedback-chip" style="background:rgba(239,68,68,0.1);color:var(--red)">${e}</div>`).join('')}`:'<div style="font-size:12px;color:var(--green)">✓ No grammar errors</div>'}`;}

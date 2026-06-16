@@ -80,7 +80,7 @@ function initSidebar(activePage) {
   const sidebarHTML = `
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <div class="sidebar-logo-icon">🧭</div>
+      <div class="sidebar-logo-icon"><img src="/assets/logo-placeholder.svg" alt="logo" style="width:40px;height:40px;object-fit:contain"></div>
       <div>
         <div class="sidebar-logo-text">Margadarshak AI</div>
         <div class="sidebar-logo-tagline">Your AI Career Mentor</div>
@@ -250,6 +250,7 @@ async function sendChatbotMsg() {
       chatbotSessionId = data.chatId;
       const formatted = escapeHtml(data.response).replace(/\n/g, '<br>');
       msgs.innerHTML += `<div class="chatbot-msg ai">${formatted}</div>`;
+      try { speak(data.response); } catch(e){}
     } else {
       msgs.innerHTML += `<div class="chatbot-msg ai">Sorry, I couldn't process that. Please try again.</div>`;
     }
@@ -281,6 +282,48 @@ function scoreColor(score) {
   if (score >= 80) return 'var(--green)';
   if (score >= 60) return 'var(--yellow)';
   return 'var(--red)';
+}
+
+// ── Speech helpers (uses Web Speech API) ─────────────────────
+function speak(text, opts = {}) {
+  if (!window.speechSynthesis || !text) return;
+  try {
+    const utter = new SpeechSynthesisUtterance(typeof text === 'string' ? text : String(text));
+    utter.lang = opts.lang || 'en-US';
+    utter.rate = typeof opts.rate === 'number' ? opts.rate : 1;
+    utter.pitch = typeof opts.pitch === 'number' ? opts.pitch : 1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utter);
+  } catch (e) { console.warn('TTS failed', e); }
+}
+
+function startRecognition({ lang = 'en-US', interim = false } = {}) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return null;
+  const recog = new SpeechRecognition();
+  recog.lang = lang;
+  recog.interimResults = interim;
+  recog.maxAlternatives = 1;
+  return recog;
+}
+
+function recognizeOnce({ lang = 'en-US', timeout = 10000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const recog = startRecognition({ lang, interim: false });
+    if (!recog) return reject(new Error('SpeechRecognition not supported'));
+    let finished = false;
+    const timer = setTimeout(() => { if (!finished) { finished = true; try { recog.stop(); } catch{}; reject(new Error('Recognition timeout')); } }, timeout);
+    recog.onresult = (e) => {
+      finished = true;
+      clearTimeout(timer);
+      const t = e.results[0][0].transcript;
+      try { recog.stop(); } catch {}
+      resolve(t);
+    };
+    recog.onerror = (err) => { if (!finished) { finished = true; clearTimeout(timer); reject(err.error || err); } };
+    recog.onend = () => { if (!finished) { finished = true; clearTimeout(timer); reject(new Error('No speech detected')); } };
+    try { recog.start(); } catch (e) { clearTimeout(timer); reject(e); }
+  });
 }
 
 // ── Init page ─────────────────────────────────────────────────

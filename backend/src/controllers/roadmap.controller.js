@@ -4,19 +4,70 @@ const pdfService = require('../services/pdf.service');
 const Todo = require('../models/Todo');
 const { safeParse } = openaiService;
 
+function tryParseArray(value) {
+  try {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      // Try JSON parse
+      const p = JSON.parse(value);
+      if (Array.isArray(p)) return p;
+      // Fallback: split on newlines or bullets
+      return value.split(/\r?\n|\r|\u2022|\-|\*|\d+\./).map(s => s.trim()).filter(Boolean);
+    }
+  } catch (e) { }
+  return [];
+}
+
+function normalizeResource(r) {
+  if (!r) return null;
+  if (typeof r === 'object') return {
+    title: r.title || r.name || '',
+    type: r.type || 'link',
+    url: r.url || r.link || '',
+    free: typeof r.free === 'boolean' ? r.free : false
+  };
+  if (typeof r === 'string') {
+    // try JSON
+    try {
+      const j = JSON.parse(r);
+      if (Array.isArray(j)) return normalizeResource(j[0]);
+      if (j && typeof j === 'object') return normalizeResource(j);
+    } catch (e) {}
+    // extract url
+    const urlMatch = r.match(/https?:\/\/[^\s)\]]+/);
+    const url = urlMatch ? urlMatch[0] : '';
+    const title = r.replace(url, '').trim().replace(/^[\-\u2022\*\d\.\)\s]+/, '').trim();
+    return { title: title || url || 'Resource', type: url ? 'link' : 'note', url, free: /free/i.test(r) };
+  }
+  return null;
+}
+
 exports.generate = async (req, res) => {
   try {
     const { careerGoal, skills, experience, duration } = req.body;
     const roadmapData = await openaiService.generateRoadmap({ careerGoal, skills, experience, duration });
     const parsed = safeParse(roadmapData);
-    
+    // Defensive parsing: ensure arrays/fields conform to schema
+    const safe = {};
+    safe.title = parsed.title || `${careerGoal} Roadmap`;
+    safe.milestones = Array.isArray(parsed.milestones) ? parsed.milestones : (parsed.milestones ? tryParseArray(parsed.milestones) : []);
+    safe.projects = Array.isArray(parsed.projects) ? parsed.projects : (parsed.projects ? tryParseArray(parsed.projects) : []);
+    safe.certifications = Array.isArray(parsed.certifications) ? parsed.certifications : (parsed.certifications ? tryParseArray(parsed.certifications) : []);
+    // For now, avoid complex resource parsing from AI responses that may be unstructured
+    safe.resources = [];
+
     const roadmap = await Roadmap.create({
       user: req.user._id,
+      title: safe.title,
       careerGoal,
       currentSkills: skills || req.user.skills,
       experience: experience || req.user.experience,
       duration: duration || 12,
-      ...parsed
+      milestones: safe.milestones,
+      projects: safe.projects,
+      certifications: safe.certifications,
+      resources: safe.resources,
+      aiGenerated: true
     });
     
     if (parsed.milestones?.[0]?.tasks) {

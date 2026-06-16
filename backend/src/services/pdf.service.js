@@ -15,13 +15,44 @@ const generatePDF = async (html) => {
 };
 
 const uploadPDFToCloudinary = async (pdfBuffer, folder, filename) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: `margadarshak/${folder}`, public_id: filename, resource_type: 'raw', format: 'pdf' },
-      (err, result) => { if (err) reject(err); else resolve(result.secure_url); }
-    );
-    stream.end(pdfBuffer);
-  });
+  // Try Cloudinary upload first; fallback to local file if not configured or upload fails
+  try {
+    if (!cloudinary || !cloudinary.uploader) throw new Error('Cloudinary not configured');
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: `margadarshak/${folder}`, public_id: filename, resource_type: 'raw', format: 'pdf' },
+        (err, result) => { if (err) reject(err); else resolve(result); }
+      );
+      stream.end(pdfBuffer);
+    });
+    const url = result && (result.secure_url || result.url);
+    // verify accessibility
+    if (url) {
+      const https = require('https');
+      const accessible = await new Promise(resolve => {
+        try {
+          const req = https.request(url, { method: 'HEAD' }, (res) => { resolve(res.statusCode >= 200 && res.statusCode < 400); });
+          req.on('error', () => resolve(false));
+          req.end();
+        } catch (e) { resolve(false); }
+      });
+      if (accessible) return url;
+      // else fall through to local save
+    }
+    // If result missing or not accessible, throw to trigger fallback
+    throw new Error('Cloudinary upload returned inaccessible URL');
+  } catch (err) {
+    // Fallback: save to backend/public/reports and return local URL
+    const fs = require('fs');
+    const path = require('path');
+    const reportsDir = path.join(__dirname, '..', '..', 'public', 'reports');
+    try { fs.mkdirSync(reportsDir, { recursive: true }); } catch(e){}
+    const filePath = path.join(reportsDir, `${filename}.pdf`);
+    fs.writeFileSync(filePath, pdfBuffer);
+    // Return a path that the server can serve (see server static route)
+    const host = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
+    return `${host}/reports/${filename}.pdf`;
+  }
 };
 
 exports.generateAssessmentPDF = async (assessment, user) => {
@@ -232,3 +263,4 @@ body { background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; paddi
 };
 
 module.exports.generatePDF = generatePDF;
+module.exports.uploadPDFToCloudinary = uploadPDFToCloudinary;

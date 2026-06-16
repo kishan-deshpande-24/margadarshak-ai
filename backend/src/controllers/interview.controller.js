@@ -1,4 +1,5 @@
 const Interview = require('../models/Interview');
+const mongoose = require('mongoose');
 const openaiService = require('../services/openai.service');
 const pdfService = require('../services/pdf.service');
 const { AccessToken } = require('livekit-server-sdk');
@@ -42,23 +43,87 @@ exports.getQuestion = async (req, res) => {
     const interview = await Interview.findById(interviewId);
     if (!interview) return res.status(404).json({ success: false, message: 'Interview not found' });
     
-    const previousQuestions = interview.questions.map(q => q.question);
+    let previousQuestions = [];
+    if (Array.isArray(interview.questions)) {
+      previousQuestions = interview.questions.filter(q => q && typeof q === 'object').map(q => q.question || '').filter(Boolean);
+      const hasMalformed = interview.questions.some(q => typeof q !== 'object');
+      if (hasMalformed) {
+        await Interview.findByIdAndUpdate(interview._id, { $set: { questions: interview.questions.filter(q => typeof q === 'object') } }, { runValidators: false });
+      }
+    } else if (typeof interview.questions === 'string') {
+      // Recover from malformed stored data
+      previousQuestions = interview.questions.match(/question:\s*['\"]([^'\"]+)['\"]/g)?.map(s => s.replace(/question:\s*['\"]|['\"]$/g, '')) || [];
+      await Interview.findByIdAndUpdate(interview._id, { $set: { questions: [] } }, { runValidators: false });
+      interview.questions = [];
+    }
     const difficulty = previousQuestions.length < 3 ? 'easy' : previousQuestions.length < 6 ? 'medium' : 'hard';
     
     const qData = await openaiService.generateInterviewQuestion(
       interview.company, interview.round, difficulty, previousQuestions, req.user
     );
-    const parsed = safeParse(qData);
-    
-    if (interview.status === 'scheduled') {
-      interview.status = 'active';
-      interview.startedAt = new Date();
+    let parsed = null;
+    try {
+      parsed = safeParse(qData);
+    } catch (parseErr) {
+      parsed = null;
     }
-    
-    interview.questions.push({ ...parsed, timeSpent: 0 });
-    await interview.save();
-    
-    res.json({ success: true, question: parsed, questionIndex: interview.questions.length - 1 });
+
+    if (Array.isArray(parsed)) {
+      parsed = parsed[0];
+    }
+    if (parsed && parsed.questions && Array.isArray(parsed.questions)) {
+      parsed = parsed.questions[0];
+    }
+
+    const parseList = (raw) => {
+      if (!raw) return [];
+      if (Array.isArray(raw)) {
+        return raw.map(item => String(item?.question || item?.text || item).trim()).filter(Boolean);
+      }
+      return String(raw).split(/\r?\n|;|\||,|\[|\]/).map(s => s.replace(/['\"]+/g, '').trim()).filter(Boolean);
+    };
+
+    const fallbackParse = (text) => {
+      if (typeof text !== 'string') return null;
+      const questionMatch = text.match(/question\s*[:=]\s*['\"]([^'\"]+)['\"]/i);
+      const difficultyMatch = text.match(/difficulty\s*[:=]\s*['\"]([^'\"]+)['\"]/i);
+      const typeMatch = text.match(/type\s*[:=]\s*['\"]([^'\"]+)['\"]/i);
+      const expectedKeyPointsMatch = text.match(/expectedKeyPoints\s*[:=]\s*\[([^\]]*)\]/i);
+      const followUpsMatch = text.match(/followUps\s*[:=]\s*\[([^\]]*)\]/i);
+      return {
+        question: questionMatch?.[1] || '',
+        type: typeMatch?.[1] || 'technical',
+        difficulty: difficultyMatch?.[1] || difficulty,
+        expectedKeyPoints: parseList(expectedKeyPointsMatch?.[1]),
+        followUps: parseList(followUpsMatch?.[1]).map(question => ({ question }))
+      };
+    };
+
+    const normalizeQuestion = (p) => {
+      if (!p) p = fallbackParse(String(qData));
+      if (!p) return { question: 'Sorry, could not generate a question', type: 'technical', difficulty, expectedKeyPoints: [], followUps: [], timeSpent: 0 };
+      const expectedKeyPoints = Array.isArray(p.expectedKeyPoints)
+        ? p.expectedKeyPoints.map(item => String(item?.text || item).trim()).filter(Boolean)
+        : parseList(p.expectedKeyPoints);
+      const followUps = Array.isArray(p.followUps)
+        ? p.followUps.map(item => String(item?.question || item?.text || item).trim()).filter(Boolean)
+        : parseList(p.followUps);
+      return {
+        question: String(p.question || p.prompt || p.text || '').trim() || 'Sorry, could not generate a question',
+        type: String(p.type || 'technical').trim() || 'technical',
+        difficulty: String(p.difficulty || difficulty).trim() || difficulty,
+        expectedKeyPoints,
+        followUps: followUps.map(question => ({ question })),
+        timeSpent: 0
+      };
+    };
+
+    const safeQuestion = normalizeQuestion(parsed);
+    const update = { $push: { questions: safeQuestion } };
+    if (interview.status === 'scheduled') { update.$set = { status: 'active', startedAt: new Date() }; }
+    const updated = await Interview.findByIdAndUpdate(interview._id, update, { new: true, runValidators: false });
+    const questionIndex = (updated.questions || []).length - 1;
+    res.json({ success: true, question: safeQuestion, questionIndex });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

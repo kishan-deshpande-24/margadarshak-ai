@@ -102,15 +102,7 @@ body { background:linear-gradient(135deg,#0f172a,#1e293b); color:#fff; padding:4
 </body></html>`;
 
     const pdfBuffer = await pdfService.generatePDF(html);
-    const { cloudinary } = require('../middleware/upload');
-    const url = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder: 'margadarshak/reports', public_id: `english-${session._id}`, resource_type: 'raw', format: 'pdf' },
-        (err, result) => { if (err) reject(err); else resolve(result.secure_url); }
-      );
-      stream.end(pdfBuffer);
-    });
-
+    const url = await pdfService.uploadPDFToCloudinary(pdfBuffer, 'reports', `english-${session._id}`);
     session.reportPdfUrl = url;
     await session.save();
     res.json({ success: true, url });

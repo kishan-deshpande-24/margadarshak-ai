@@ -113,8 +113,9 @@
               <div style="margin-top:8px"><span id="answerScore" class="tag tag-green"></span></div>
             </div>
             <textarea class="form-input answer-area" id="answerInput" placeholder="Type your answer here..."></textarea>
-            <div style="display:flex;gap:10px">
+            <div style="display:flex;gap:10px;align-items:center">
               <button class="btn btn-secondary" id="nextQBtn" onclick="getNextQuestion()" style="flex:1;justify-content:center">▶ Next Question</button>
+              <button class="btn btn-ghost" id="voiceAnswerBtn" onclick="voiceInputInterview()" title="Speak answer">🎙️</button>
               <button class="btn btn-primary" id="submitAnsBtn" onclick="submitAnswer()" style="flex:1;justify-content:center" disabled>✓ Submit Answer</button>
             </div>
             <div class="analytics-bar" id="analyticsBar">
@@ -144,11 +145,11 @@ initPage('interview', 'Interview Simulator');
 function escapeHtml(str){if(str==null)return '';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
 
 const COMPANIES = [
-  {name:'Google',logo:'🔵'},{name:'Amazon',logo:'🟠'},{name:'Microsoft',logo:'🪟'},
-  {name:'Meta',logo:'🔷'},{name:'Apple',logo:'🍎'},{name:'Netflix',logo:'🔴'},
-  {name:'Adobe',logo:'🅰️'},{name:'Uber',logo:'⚫'},{name:'Airbnb',logo:'🏠'},
-  {name:'Salesforce',logo:'☁️'},{name:'Zoho',logo:'🟢'},{name:'Infosys',logo:'🔹'},
-  {name:'TCS',logo:'🔵'},{name:'Wipro',logo:'🟡'},{name:'Flipkart',logo:'💛'},
+  {name:'Google',logo:'/assets/logos/google.svg'},{name:'Amazon',logo:'/assets/logos/amazon.svg'},{name:'Microsoft',logo:'/assets/logos/microsoft.svg'},
+  {name:'Meta',logo:'/assets/logos/meta.svg'},{name:'Apple',logo:'/assets/logos/apple.svg'},{name:'Netflix',logo:'/assets/logos/netflix.svg'},
+  {name:'Adobe',logo:'/assets/logos/adobe.svg'},{name:'Uber',logo:'/assets/logos/uber.svg'},{name:'Airbnb',logo:'/assets/logos/airbnb.svg'},
+  {name:'Salesforce',logo:'/assets/logos/salesforce.svg'},{name:'Zoho',logo:'/assets/logos/zoho.svg'},{name:'Infosys',logo:'/assets/logos/infosys.svg'},
+  {name:'TCS',logo:'/assets/logos/tcs.svg'},{name:'Wipro',logo:'/assets/logos/wipro.svg'},{name:'Flipkart',logo:'/assets/logos/flipkart.svg'},
 ];
 const ROUNDS = [
   {id:'hr',label:'HR Round',icon:'🤝'},
@@ -165,7 +166,7 @@ let micOn = true, camOn = false, timerInterval = null, startTime = null;
 // Render company grid
 document.getElementById('companyGrid').innerHTML = COMPANIES.map(c => `
   <div class="company-card" onclick="selectCompany('${c.name}',this)">
-    <div class="company-logo">${c.logo}</div>
+    <div style="height:44px;display:flex;align-items:center;justify-content:center;margin-bottom:8px"><img src="${c.logo}" alt="${c.name}" style="height:36px;object-fit:contain"></div>
     <div class="company-name">${c.name}</div>
   </div>`).join('');
 
@@ -280,6 +281,7 @@ async function getNextQuestion() {
   document.getElementById('diffTag').textContent = capitalize(data.question.difficulty);
   document.getElementById('diffTag').className = `tag ${data.question.difficulty==='easy'?'tag-green':data.question.difficulty==='medium'?'tag-yellow':'tag-red'}`;
   document.getElementById('aiStatus').textContent = '● Listening...';
+  try{ speak(data.question.question); } catch(e){}
 }
 
 async function submitAnswer() {
@@ -296,13 +298,26 @@ async function submitAnswer() {
     document.getElementById('answerScore').textContent = `Score: ${data.score}%`;
     document.getElementById('answerScore').className = `tag ${data.score>=70?'tag-green':data.score>=50?'tag-yellow':'tag-red'}`;
     document.getElementById('aiStatus').textContent = '● Ready';
+    try{ if (data.feedback) speak(data.feedback); } catch(e){}
     if (data.followUpQuestion) {
       setTimeout(() => {
         document.getElementById('currentQuestion').textContent = `Follow-up: ${data.followUpQuestion}`;
         document.getElementById('answerInput').value = '';
+        try{ speak(data.followUpQuestion); } catch(e){}
       }, 3000);
     }
   }
+}
+
+async function voiceInputInterview(){
+  const btn = document.getElementById('voiceAnswerBtn');
+  setLoading(btn, true);
+  try {
+    const text = await recognizeOnce({ lang: 'en-US', timeout: 20000 });
+    document.getElementById('answerInput').value = text;
+    await submitAnswer();
+  } catch (e) { toast('Voice input failed: '+(e.message||e), 'error'); }
+  setLoading(btn, false, '🎙️');
 }
 
 async function endInterview() {

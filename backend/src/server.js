@@ -11,6 +11,10 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 const server = http.createServer(app);
+const path = require('path');
+
+// Serve generated reports (PDFs) if saved locally
+app.use('/reports', express.static(path.join(__dirname, '..', 'public', 'reports')));
 
 // Socket.IO
 const io = new Server(server, {
@@ -52,6 +56,10 @@ app.use('/api/livekit', require('./routes/livekit'));
 app.use('/api/judge0', require('./routes/judge0'));
 app.use('/api/pdf', require('./routes/pdf'));
 app.use('/api/analytics', require('./routes/analytics'));
+// Dev routes (only in non-production)
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api/dev', require('./routes/dev'));
+}
 
 // Socket handlers
 require('./sockets/chat')(io);
