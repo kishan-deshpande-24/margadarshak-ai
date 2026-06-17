@@ -1,4 +1,4 @@
-const API = 'http://localhost:5000/api';
+const API = 'https://margadarshak-ai-zn3r.onrender.com/api';
 
 // ── HTML escape helper (XSS prevention) ──────────────────────
 function escapeHtml(str) {

@@ -50,7 +50,7 @@ const uploadPDFToCloudinary = async (pdfBuffer, folder, filename) => {
     const filePath = path.join(reportsDir, `${filename}.pdf`);
     fs.writeFileSync(filePath, pdfBuffer);
     // Return a path that the server can serve (see server static route)
-    const host = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
+    const host = process.env.BACKEND_URL || `https://margadarshak-ai-zn3r.onrender.com`;
     return `${host}/reports/${filename}.pdf`;
   }
 };

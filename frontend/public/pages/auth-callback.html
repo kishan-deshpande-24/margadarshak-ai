@@ -15,7 +15,7 @@ const error = params.get('error');
 if (error || !token) { window.location.href = '/pages/login.html?error=google_failed'; }
 else {
   (async () => {
-    const data = await fetch('http://localhost:5000/api/users/me', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()).catch(() => ({ success: false }));
+    const data = await fetch('https://margadarshak-ai-zn3r.onrender.com/api/users/me', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()).catch(() => ({ success: false }));
     if (data.success) {
       Auth.setSession(token, data.user);
       window.location.href = data.user.onboardingCompleted ? '/pages/dashboard.html' : '/pages/onboarding.html';
