@@ -7,16 +7,19 @@ const interviewSchema = new mongoose.Schema({
   roomName: { type: String, unique: true },
   livekitToken: String,
   status: { type: String, enum: ['scheduled', 'active', 'completed', 'abandoned'], default: 'scheduled' },
-  questions: [{
-    question: String,
-    type: String,
-    difficulty: String,
-    answer: String,
-    feedback: String,
-    score: Number,
-    timeSpent: Number,
-    followUps: [{ question: String, answer: String }]
-  }],
+  questions: {
+    type: [{
+      question: String,
+      type: String,
+      difficulty: String,
+      answer: String,
+      feedback: String,
+      score: Number,
+      timeSpent: Number,
+      followUps: [{ question: String, answer: String }]
+    }],
+    default: []
+  },
   codeSubmissions: [{
     problem: String,
     language: String,

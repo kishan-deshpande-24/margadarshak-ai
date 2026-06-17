@@ -44,17 +44,19 @@ exports.getQuestion = async (req, res) => {
     if (!interview) return res.status(404).json({ success: false, message: 'Interview not found' });
     
     let previousQuestions = [];
-    if (Array.isArray(interview.questions)) {
+    if (!Array.isArray(interview.questions)) {
+      if (typeof interview.questions === 'string') {
+        // Recover from malformed stored data
+        previousQuestions = interview.questions.match(/question:\s*['\"]([^'\"]+)['\"]/g)?.map(s => s.replace(/question:\s*['\"]|['\"]$/g, '')) || [];
+      }
+      await Interview.findByIdAndUpdate(interview._id, { $set: { questions: [] } }, { runValidators: false });
+      interview.questions = [];
+    } else {
       previousQuestions = interview.questions.filter(q => q && typeof q === 'object').map(q => q.question || '').filter(Boolean);
       const hasMalformed = interview.questions.some(q => typeof q !== 'object');
       if (hasMalformed) {
         await Interview.findByIdAndUpdate(interview._id, { $set: { questions: interview.questions.filter(q => typeof q === 'object') } }, { runValidators: false });
       }
-    } else if (typeof interview.questions === 'string') {
-      // Recover from malformed stored data
-      previousQuestions = interview.questions.match(/question:\s*['\"]([^'\"]+)['\"]/g)?.map(s => s.replace(/question:\s*['\"]|['\"]$/g, '')) || [];
-      await Interview.findByIdAndUpdate(interview._id, { $set: { questions: [] } }, { runValidators: false });
-      interview.questions = [];
     }
     const difficulty = previousQuestions.length < 3 ? 'easy' : previousQuestions.length < 6 ? 'medium' : 'hard';
     
@@ -69,10 +71,13 @@ exports.getQuestion = async (req, res) => {
     }
 
     if (Array.isArray(parsed)) {
-      parsed = parsed[0];
+      parsed = parsed.find(item => item && typeof item === 'object') || parsed[0];
     }
     if (parsed && parsed.questions && Array.isArray(parsed.questions)) {
       parsed = parsed.questions[0];
+    }
+    if (parsed && typeof parsed !== 'object') {
+      parsed = null;
     }
 
     const parseList = (raw) => {
@@ -118,13 +123,41 @@ exports.getQuestion = async (req, res) => {
       };
     };
 
-    const safeQuestion = normalizeQuestion(parsed);
-    const update = { $push: { questions: safeQuestion } };
-    if (interview.status === 'scheduled') { update.$set = { status: 'active', startedAt: new Date() }; }
-    const updated = await Interview.findByIdAndUpdate(interview._id, update, { new: true, runValidators: false });
+    let safeQuestion = normalizeQuestion(parsed);
+    if (Array.isArray(safeQuestion)) {
+      safeQuestion = safeQuestion.find(item => item && typeof item === 'object') || {};
+    }
+    if (!safeQuestion || typeof safeQuestion !== 'object') {
+      safeQuestion = {
+        question: String(qData || 'Sorry, could not generate a question'),
+        type: 'technical',
+        difficulty,
+        expectedKeyPoints: [],
+        followUps: [],
+        timeSpent: 0
+      };
+    }
+    safeQuestion.question = String(safeQuestion.question || 'Sorry, could not generate a question').trim();
+    safeQuestion.type = String(safeQuestion.type || 'technical').trim();
+    safeQuestion.difficulty = String(safeQuestion.difficulty || difficulty).trim();
+    safeQuestion.expectedKeyPoints = Array.isArray(safeQuestion.expectedKeyPoints)
+      ? safeQuestion.expectedKeyPoints.map(item => String(item?.text || item).trim()).filter(Boolean)
+      : parseList(safeQuestion.expectedKeyPoints);
+    const followUps = Array.isArray(safeQuestion.followUps)
+      ? safeQuestion.followUps.map(item => String(item?.question || item?.text || item).trim()).filter(Boolean)
+      : parseList(safeQuestion.followUps);
+    safeQuestion.followUps = followUps.map(question => ({ question }));
+
+    if (interview.status === 'scheduled') {
+      interview.status = 'active';
+      interview.startedAt = new Date();
+    }
+    interview.questions.push(safeQuestion);
+    const updated = await interview.save();
     const questionIndex = (updated.questions || []).length - 1;
     res.json({ success: true, question: safeQuestion, questionIndex });
   } catch (err) {
+    console.error('Interview getQuestion error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
