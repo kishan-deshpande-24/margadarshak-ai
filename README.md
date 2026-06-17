@@ -469,3 +469,18 @@ Margadarshak AI
 ## Tagline
 
 Your AI Career Mentor
+
+
+# Margadarshak AI
+
+## Live Demo
+Frontend: https://margadarshak-ai-one.vercel.app
+
+Backend: https://margadarshak-ai-zn3r.onrender.com
+
+## Features
+- AI Career Guidance
+- Resume Analyzer
+- Interview Simulator
+- English Mentor
+- Roadmap Generator
