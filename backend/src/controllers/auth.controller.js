@@ -8,7 +8,8 @@ const passport = require('passport');
 
 exports.signup = async (req, res) => {
   try {
-    const { fullName, email, phone, password, skills, bio } = req.body;
+    let { fullName, email, phone, password, skills, bio } = req.body;
+    email = (email || '').trim().toLowerCase();
     if (await User.findOne({ email })) return res.status(400).json({ success: false, message: 'Email already registered' });
     
     const otp = generateOTP();
@@ -20,7 +21,13 @@ exports.signup = async (req, res) => {
       emailOTPExpiry: new Date(Date.now() + 10 * 60 * 1000)
     });
     
-    await emailService.sendOTP(email, fullName, otp);
+    let emailSent = true;
+    try {
+      await emailService.sendOTP(email, fullName, otp);
+    } catch (mailErr) {
+      emailSent = false;
+      console.error('Signup OTP email failed:', mailErr.message);
+    }
     if (phone) {
       const phoneOTP = generateOTP();
       user.phoneOTP = phoneOTP;
@@ -29,7 +36,14 @@ exports.signup = async (req, res) => {
       try { await twilioService.sendOTP(phone, phoneOTP, email); } catch(e) { console.log('Phone OTP failed:', e.message); }
     }
     
-    res.status(201).json({ success: true, message: 'Account created. Please verify your email.', userId: user._id });
+    res.status(201).json({
+      success: true,
+      message: emailSent
+        ? 'Account created. Please verify your email.'
+        : 'Account created, but we could not send the verification email right now. Use "Resend OTP" or contact support.',
+      emailSent,
+      userId: user._id
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -49,7 +63,7 @@ exports.verifyEmailOTP = async (req, res) => {
     user.profileCompletion = user.calculateProfileCompletion();
     await user.save();
     
-    await emailService.sendWelcome(user.email, user.fullName);
+    try { await emailService.sendWelcome(user.email, user.fullName); } catch (mailErr) { console.error('Welcome email failed:', mailErr.message); }
     const token = generateToken(user._id);
     res.json({ success: true, token, user: sanitizeUser(user) });
   } catch (err) {
@@ -78,8 +92,9 @@ exports.verifyPhoneOTP = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { identifier, password } = req.body;
+    const id = (identifier || '').trim();
     const user = await User.findOne({
-      $or: [{ email: identifier }, { phone: identifier }]
+      $or: [{ email: id.toLowerCase() }, { phone: id }]
     });
     if (!user || !(await user.comparePassword(password)))
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
@@ -95,7 +110,7 @@ exports.login = async (req, res) => {
 
 exports.forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = (req.body.email || '').trim().toLowerCase();
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ success: false, message: 'Email not found' });
     
@@ -143,16 +158,18 @@ exports.resendOTP = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     const otp = generateOTP();
-    if (type === 'email') {
-      user.emailOTP = otp;
-      user.emailOTPExpiry = new Date(Date.now() + 10 * 60 * 1000);
-      await user.save();
-      await emailService.sendOTP(user.email, user.fullName, otp);
-    } else if (type === 'phone') {
+    if (type === 'phone') {
       user.phoneOTP = otp;
       user.phoneOTPExpiry = new Date(Date.now() + 10 * 60 * 1000);
       await user.save();
-      await twilioService.sendOTP(user.phone, otp, user.email);
+      try { await twilioService.sendOTP(user.phone, otp, user.email); }
+      catch (e) { console.error('Resend phone OTP failed:', e.message); return res.status(502).json({ success: false, message: 'Could not send OTP. Please try again later.' }); }
+    } else {
+      user.emailOTP = otp;
+      user.emailOTPExpiry = new Date(Date.now() + 10 * 60 * 1000);
+      await user.save();
+      try { await emailService.sendOTP(user.email, user.fullName, otp); }
+      catch (e) { console.error('Resend email OTP failed:', e.message); return res.status(502).json({ success: false, message: 'Could not send the email right now. Please try again later.' }); }
     }
     res.json({ success: true, message: 'OTP resent' });
   } catch (err) {

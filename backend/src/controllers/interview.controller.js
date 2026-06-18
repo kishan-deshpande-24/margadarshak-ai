@@ -20,18 +20,24 @@ exports.create = async (req, res) => {
       status: 'scheduled'
     });
     
-    // Generate LiveKit token
-    const token = new AccessToken(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET, {
-      identity: req.user._id.toString(),
-      name: req.user.fullName
-    });
-    token.addGrant({ roomJoin: true, room: roomName, canPublish: true, canSubscribe: true });
-    const livekitToken = await token.toJwt();
+    // Generate LiveKit token (optional — the interview Q&A flow works without it).
+    let livekitToken = null;
+    if (process.env.LIVEKIT_API_KEY && process.env.LIVEKIT_API_SECRET) {
+      try {
+        const token = new AccessToken(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET, {
+          identity: req.user._id.toString(),
+          name: req.user.fullName
+        });
+        token.addGrant({ roomJoin: true, room: roomName, canPublish: true, canSubscribe: true });
+        livekitToken = await token.toJwt();
+        interview.livekitToken = livekitToken;
+        await interview.save();
+      } catch (lkErr) {
+        console.error('LiveKit token generation failed (continuing without video):', lkErr.message);
+      }
+    }
     
-    interview.livekitToken = livekitToken;
-    await interview.save();
-    
-    res.json({ success: true, interview, livekitToken, roomName, livekitUrl: process.env.LIVEKIT_URL });
+    res.json({ success: true, interview, livekitToken, roomName, livekitUrl: process.env.LIVEKIT_URL || null });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -60,12 +66,18 @@ exports.getQuestion = async (req, res) => {
     }
     const difficulty = previousQuestions.length < 3 ? 'easy' : previousQuestions.length < 6 ? 'medium' : 'hard';
     
-    const qData = await openaiService.generateInterviewQuestion(
-      interview.company, interview.round, difficulty, previousQuestions, req.user
-    );
+    let qData = null;
+    try {
+      qData = await openaiService.generateInterviewQuestion(
+        interview.company, interview.round, difficulty, previousQuestions, req.user
+      );
+    } catch (aiErr) {
+      console.error('AI question generation failed, using company fallback bank:', aiErr.message);
+      qData = null;
+    }
     let parsed = null;
     try {
-      parsed = safeParse(qData);
+      parsed = qData ? safeParse(qData) : null;
     } catch (parseErr) {
       parsed = null;
     }
@@ -148,6 +160,13 @@ exports.getQuestion = async (req, res) => {
       : parseList(safeQuestion.followUps);
     safeQuestion.followUps = followUps.map(question => ({ question }));
 
+    // If AI failed to produce a usable question, serve a real company-specific one.
+    const failedQuestion = !safeQuestion.question || /^sorry, could not generate/i.test(safeQuestion.question);
+    if (failedQuestion) {
+      const fb = openaiService.getFallbackInterviewQuestion(interview.company, interview.round, previousQuestions);
+      safeQuestion = { ...fb, followUps: (fb.followUps || []).map(question => ({ question })), timeSpent: 0 };
+    }
+
     if (interview.status === 'scheduled') {
       interview.status = 'active';
       interview.startedAt = new Date();
@@ -169,8 +188,22 @@ exports.submitAnswer = async (req, res) => {
     if (!interview) return res.status(404).json({ success: false, message: 'Interview not found' });
     
     const question = interview.questions[questionIndex];
-    const evalData = await openaiService.evaluateInterviewAnswer(question.question, answer, interview.company, interview.round);
-    const parsed = safeParse(evalData);
+    let parsed;
+    try {
+      const evalData = await openaiService.evaluateInterviewAnswer(question.question, answer, interview.company, interview.round);
+      parsed = safeParse(evalData);
+    } catch (evalErr) {
+      console.error('AI answer evaluation failed, using heuristic fallback:', evalErr.message);
+      const words = String(answer || '').trim().split(/\s+/).filter(Boolean).length;
+      const score = Math.max(20, Math.min(85, 30 + words * 2));
+      parsed = {
+        score,
+        feedback: words < 15
+          ? 'Your answer was quite brief. Try to structure it more fully — explain your reasoning, give a concrete example, and summarize the outcome.'
+          : 'Good effort. To strengthen this answer, add a specific example, quantify the impact where possible, and clearly state the result or what you learned.',
+        followUpQuestion: ''
+      };
+    }
     
     interview.questions[questionIndex] = {
       ...question,
@@ -221,9 +254,29 @@ exports.complete = async (req, res) => {
     interview.completedAt = new Date();
     interview.duration = Math.round((new Date() - interview.startedAt) / 60000);
     
-    // Generate report
-    const reportData = await openaiService.generateInterviewReport(interview);
-    const reportParsed = safeParse(reportData);
+    // Generate report (fall back to a score-based summary if AI is unavailable)
+    let reportParsed;
+    try {
+      const reportData = await openaiService.generateInterviewReport(interview);
+      reportParsed = safeParse(reportData);
+    } catch (reportErr) {
+      console.error('AI report generation failed, using fallback summary:', reportErr.message);
+      const good = avgScore >= 70;
+      reportParsed = {
+        strengths: good
+          ? ['Clear and structured responses', 'Relevant examples used', 'Good topic understanding']
+          : ['Attempted all questions', 'Willingness to engage with the problem'],
+        improvements: good
+          ? ['Add more measurable impact to examples', 'Tighten up answer structure']
+          : ['Provide more detailed, structured answers', 'Use concrete examples (STAR method)', 'Deepen technical explanations'],
+        aiRecommendations: [
+          `Practice more ${interview.round} questions for ${interview.company}`,
+          'Use the STAR method (Situation, Task, Action, Result) for behavioral answers',
+          'Review fundamentals and rehearse out loud'
+        ],
+        companyReadinessScore: avgScore
+      };
+    }
     interview.strengths = reportParsed.strengths;
     interview.improvements = reportParsed.improvements;
     interview.aiRecommendations = reportParsed.aiRecommendations;

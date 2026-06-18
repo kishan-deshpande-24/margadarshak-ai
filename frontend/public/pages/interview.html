@@ -281,15 +281,17 @@ async function getNextQuestion() {
   document.getElementById('diffTag').textContent = capitalize(data.question.difficulty);
   document.getElementById('diffTag').className = `tag ${data.question.difficulty==='easy'?'tag-green':data.question.difficulty==='medium'?'tag-yellow':'tag-red'}`;
   document.getElementById('aiStatus').textContent = '● Listening...';
+  document.getElementById('submitAnsBtn').disabled = false;
   try{ speak(data.question.question); } catch(e){}
 }
 
 async function submitAnswer() {
   const answer = document.getElementById('answerInput').value.trim();
-  if (!answer) return toast('Please type your answer first', 'error');
+  if (!answer) return toast('Please answer first', 'error');
   if (currentQIndex < 0) return toast('Get a question first', 'error');
   const btn = document.getElementById('submitAnsBtn');
   setLoading(btn, true);
+  document.getElementById('aiStatus').textContent = '● Evaluating...';
   const data = await post('/interview/answer', { interviewId, questionIndex: currentQIndex, answer, timeSpent: Math.floor((new Date()-startTime)/1000), analyticsData: { tabSwitches } });
   setLoading(btn, false, '✓ Submit Answer');
   if (data.success) {
@@ -298,26 +300,55 @@ async function submitAnswer() {
     document.getElementById('answerScore').textContent = `Score: ${data.score}%`;
     document.getElementById('answerScore').className = `tag ${data.score>=70?'tag-green':data.score>=50?'tag-yellow':'tag-red'}`;
     document.getElementById('aiStatus').textContent = '● Ready';
+    // Lock the answered question until the next one loads
+    document.getElementById('submitAnsBtn').disabled = true;
     try{ if (data.feedback) speak(data.feedback); } catch(e){}
-    if (data.followUpQuestion) {
-      setTimeout(() => {
-        document.getElementById('currentQuestion').textContent = `Follow-up: ${data.followUpQuestion}`;
-        document.getElementById('answerInput').value = '';
-        try{ speak(data.followUpQuestion); } catch(e){}
-      }, 3000);
-    }
+    // After feedback is given, automatically move on to the next question
+    setTimeout(() => { getNextQuestion(); }, 6000);
+  } else {
+    document.getElementById('aiStatus').textContent = '● Ready';
+    toast(data.message || 'Could not evaluate answer', 'error');
   }
 }
 
-async function voiceInputInterview(){
+// Continuous, automatic voice answering. Tap once to start listening; it keeps
+// transcribing until you stop (tap again) or stay silent, then submits so
+// feedback is given only on the completed answer.
+let dictation = null;
+function voiceInputInterview(){
   const btn = document.getElementById('voiceAnswerBtn');
-  setLoading(btn, true);
-  try {
-    const text = await recognizeOnce({ lang: 'en-US', timeout: 20000 });
-    document.getElementById('answerInput').value = text;
-    await submitAnswer();
-  } catch (e) { toast('Voice input failed: '+(e.message||e), 'error'); }
-  setLoading(btn, false, '🎙️');
+  const input = document.getElementById('answerInput');
+
+  if (dictation) { // already listening -> stop & submit
+    dictation.stop();
+    return;
+  }
+  if (currentQIndex < 0) return toast('Get a question first', 'error');
+
+  const baseText = input.value ? input.value.trim() + ' ' : '';
+  btn.classList.add('active');
+  btn.textContent = '⏹️';
+  document.getElementById('aiStatus').textContent = '● Listening...';
+
+  dictation = startDictation({
+    lang: 'en-US',
+    silenceMs: 3000,
+    onUpdate: (text) => { input.value = baseText + text; },
+    onError: (err) => {
+      toast('Voice input failed: ' + (err.message || err), 'error');
+      dictation = null;
+      btn.classList.remove('active');
+      btn.textContent = '🎙️';
+      document.getElementById('aiStatus').textContent = '● Ready';
+    },
+    onEnd: (finalText) => {
+      dictation = null;
+      btn.classList.remove('active');
+      btn.textContent = '🎙️';
+      if (finalText) { input.value = (baseText + finalText).trim(); submitAnswer(); }
+      else { document.getElementById('aiStatus').textContent = '● Ready'; }
+    }
+  });
 }
 
 async function endInterview() {
