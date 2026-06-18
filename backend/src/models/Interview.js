@@ -1,5 +1,21 @@
 const mongoose = require('mongoose');
 
+// Defined as a standalone sub-schema so the field literally named `type` is
+// treated as a String path. Inside an inline `[{ type: String }]` definition,
+// Mongoose would otherwise interpret `type` as the array element's SchemaType,
+// turning every question into a plain String and breaking saves.
+const questionSchema = new mongoose.Schema({
+  question: String,
+  type: String,
+  difficulty: String,
+  answer: String,
+  feedback: String,
+  score: Number,
+  timeSpent: Number,
+  expectedKeyPoints: [String],
+  followUps: [{ question: String, answer: String }]
+}, { _id: false });
+
 const interviewSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   company: { type: String, required: true },
@@ -7,19 +23,7 @@ const interviewSchema = new mongoose.Schema({
   roomName: { type: String, unique: true },
   livekitToken: String,
   status: { type: String, enum: ['scheduled', 'active', 'completed', 'abandoned'], default: 'scheduled' },
-  questions: {
-    type: [{
-      question: String,
-      type: String,
-      difficulty: String,
-      answer: String,
-      feedback: String,
-      score: Number,
-      timeSpent: Number,
-      followUps: [{ question: String, answer: String }]
-    }],
-    default: []
-  },
+  questions: { type: [questionSchema], default: [] },
   codeSubmissions: [{
     problem: String,
     language: String,

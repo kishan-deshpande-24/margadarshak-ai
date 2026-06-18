@@ -307,6 +307,64 @@ function startRecognition({ lang = 'en-US', interim = false } = {}) {
   return recog;
 }
 
+// Continuous voice dictation. Listens automatically, streams interim + final
+// transcript via onUpdate, and only finishes (onEnd) when the user stops or
+// after a sustained silence — so feedback is given on the complete answer.
+function startDictation({ lang = 'en-US', silenceMs = 2500, onUpdate, onEnd, onError } = {}) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { onError && onError(new Error('SpeechRecognition not supported')); return null; }
+
+  const recog = new SpeechRecognition();
+  recog.lang = lang;
+  recog.continuous = true;
+  recog.interimResults = true;
+  recog.maxAlternatives = 1;
+
+  let finalTranscript = '';
+  let stopped = false;
+  let silenceTimer = null;
+
+  const clearSilence = () => { if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; } };
+  const armSilence = () => {
+    clearSilence();
+    silenceTimer = setTimeout(() => { stop(); }, silenceMs);
+  };
+
+  function stop() {
+    if (stopped) return;
+    stopped = true;
+    clearSilence();
+    try { recog.stop(); } catch {}
+  }
+
+  recog.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const res = e.results[i];
+      if (res.isFinal) finalTranscript += res[0].transcript + ' ';
+      else interim += res[0].transcript;
+    }
+    onUpdate && onUpdate((finalTranscript + interim).trim());
+    armSilence();
+  };
+  recog.onerror = (err) => {
+    const code = err.error || err;
+    // 'no-speech' / 'aborted' are recoverable while waiting; let onend handle close
+    if (code !== 'no-speech' && code !== 'aborted') { onError && onError(code); }
+  };
+  recog.onend = () => {
+    clearSilence();
+    if (!stopped) {
+      // Browser auto-ended (e.g. brief pause) but user hasn't stopped — keep listening
+      try { recog.start(); return; } catch {}
+    }
+    onEnd && onEnd(finalTranscript.trim());
+  };
+
+  try { recog.start(); armSilence(); } catch (e) { onError && onError(e); return null; }
+  return { stop, getTranscript: () => finalTranscript.trim() };
+}
+
 function recognizeOnce({ lang = 'en-US', timeout = 10000 } = {}) {
   return new Promise((resolve, reject) => {
     const recog = startRecognition({ lang, interim: false });

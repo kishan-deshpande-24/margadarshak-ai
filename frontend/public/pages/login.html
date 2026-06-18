@@ -60,6 +60,15 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
 <script>
 Auth.requireGuest();
 
+(function showAuthError(){
+  const err = new URLSearchParams(window.location.search).get('error');
+  if (!err) return;
+  const msg = err === 'google_unavailable'
+    ? 'Google sign-in is not available right now. Please sign in with email.'
+    : 'Google sign-in failed. Please try again or use email.';
+  document.getElementById('alertBox').innerHTML = `<div class="alert alert-error">${msg}</div>`;
+})();
+
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = document.getElementById('loginBtn');

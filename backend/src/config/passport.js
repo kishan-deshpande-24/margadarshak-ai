@@ -2,7 +2,15 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/User');
 
-passport.use(new GoogleStrategy({
+// Only register Google OAuth when credentials are configured. Registering the
+// strategy without a clientID throws and would crash the entire server on boot.
+const googleConfigured = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+passport.googleConfigured = googleConfigured;
+
+if (!googleConfigured) {
+  console.warn('⚠️  Google OAuth not configured (missing GOOGLE_CLIENT_ID/SECRET); Google sign-in disabled.');
+} else {
+  passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: process.env.GOOGLE_CALLBACK_URL
@@ -31,5 +39,6 @@ passport.use(new GoogleStrategy({
     return done(err, null);
   }
 }));
+}
 
 module.exports = passport;

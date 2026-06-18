@@ -1,4 +1,5 @@
 const Groq = require('groq-sdk');
+const { poolFor, getFallbackQuestion } = require('../data/companyQuestions');
 
 let _groq = null;
 const getClient = () => {
@@ -315,21 +316,28 @@ Return JSON: {
   return exports.chat([{ role: 'user', content: prompt }], { json: true });
 };
 
+exports.getFallbackInterviewQuestion = getFallbackQuestion;
+
 exports.generateInterviewQuestion = async (company, round, difficulty, previousQuestions, userProfile) => {
-  const prompt = `Generate 1 interview question for:
-Company: ${company}
+  // Ground the model with real, commonly-asked questions for this company/round.
+  const examples = poolFor(company, round).slice(0, 6);
+  const prompt = `You are a senior interviewer at ${company}. Ask ONE realistic interview question that has actually been asked in real ${company} ${round} interviews (or is very representative of them). Make it specific to ${company}'s known interview style — do NOT invent generic filler.
+
 Round: ${round}
 Difficulty: ${difficulty}
-User Skills: ${userProfile.skills?.join(', ')}
+Candidate skills: ${userProfile.skills?.join(', ') || 'general software engineering'}
 
-Previously asked (DO NOT repeat): ${previousQuestions.slice(-10).join(' | ')}
+Real ${company} ${round} questions for reference (use the same style; you MAY pick one of these if it has not been asked yet, otherwise produce a similar authentic one):
+${examples.map((q, i) => `${i + 1}. ${q}`).join('\n')}
+
+Previously asked in THIS session (DO NOT repeat): ${previousQuestions.slice(-10).join(' | ') || 'none yet'}
 
 Return only valid JSON with no explanation or markdown fences:
 {
   "question": "...",
   "type": "behavioral|technical|coding|system_design",
   "difficulty": "easy|medium|hard",
-  "expectedKeyPoints": [],
+  "expectedKeyPoints": ["..."],
   "followUps": ["...", "..."]
 }`;
   return exports.chat([{ role: 'user', content: prompt }], { json: true });
